@@ -7,6 +7,9 @@ const GlobalStyle = createGlobalStyle`
 		padding: 0;
 		margin: 0;
 	}
+	body{
+		overflow: hidden;
+	}
 	html {
 		font-size: 62.5%;
 	}

@@ -1,3 +1,19 @@
 export default interface Theme {
-  color: string;
+  color: {
+    desktopBackground: string;
+    taskbarBackground: string;
+  };
+  taskbarIcon: {
+    iconSideLength: number;
+    iconMargin: number;
+    borderRadius: string;
+    topHalfOpacity: number;
+    bottomHalfOpacity: number;
+  };
+  desktopWindow: {
+    headerHeight: string;
+    headerOpacity: number;
+    bodyOpacity: number;
+    borderRadius: string;
+  };
 }
