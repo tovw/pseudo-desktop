@@ -1,37 +1,22 @@
 import React, { FC, useState } from 'react';
 import styled from '../theme';
-import {
-  DraggableCore,
-  DraggableEvent,
-  DraggableData,
-  DraggableEventHandler
-} from 'react-draggable';
+import { DraggableCore, DraggableEventHandler } from 'react-draggable';
+import { UIWindow, Maybe, Coordinate } from '../utils/types';
 
-export interface UIWindow {
-  id: string;
-  color: string;
-  height: number;
-  width: number;
-  left: number;
-  top: number;
-}
-
-interface DesktopWindowProps {
+export interface WindowProps {
   uiWindow: UIWindow;
 }
 
-interface DraggableProps {
+export interface DragHandlesProps {
   updatePosition: (id: string, top: number, left: number) => void;
 }
 
-interface StyledDesktopWindowProps {
+export interface DragInfoProps {
   isDragging: boolean;
   isDragInTaskbar: boolean;
 }
 
-export type Maybe<T> = T | undefined | null;
-
-const getPosition = (
+const getPositionStyle = (
   left: number,
   top: number,
   drag: Maybe<{ y: number; x: number }>
@@ -46,99 +31,88 @@ const getPosition = (
   return { transform, paddingLeft };
 };
 
-export const DesktopWindow: FC<DesktopWindowProps & DraggableProps> = ({
+export const DesktopWindow: FC<WindowProps & DragHandlesProps> = ({
   uiWindow,
   updatePosition,
   ...rest
 }) => {
-  const [offsets, setOffsets] = useState<Maybe<{ x: number; y: number }>>();
-  const [drag, setDrag] = useState<Maybe<{ x: number; y: number }>>();
+  const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
+  const [drag, setDrag] = useState<Maybe<Coordinate>>();
 
-  const [a, sa] = useState();
-
-  const onStart: DraggableEventHandler = (e, data) => {
-    setOffsets({ x: e.clientX - uiWindow.left, y: e.clientY - uiWindow.top });
+  const onStart: DraggableEventHandler = (e, { x, y }) => {
+    setOffsets({ x: x - uiWindow.left, y: y - uiWindow.top });
     console.log('start');
   };
 
-  const onDrag = (e: DraggableEvent, data: DraggableData) => {
-    const { x, y } = offsets || { x: 0, y: 0 };
-    if (e instanceof MouseEvent) {
-      setDrag({ x: e.clientX, y: e.clientY });
-      updatePosition(uiWindow.id, e.clientX - x, e.clientY - y);
-    }
+  const onDrag: DraggableEventHandler = (e, { x, y }) => {
+    const { x: ox, y: oy } = offsets || { x: 0, y: 0 };
+    setDrag({ x, y });
+    updatePosition(uiWindow.id, x - ox, y - oy);
   };
 
-  const onStop: DraggableEventHandler = () => {
+  const onStop: DraggableEventHandler = (e, { x, y }) => {
+    const { x: ox, y: oy } = offsets || { x: 0, y: 0 };
+    updatePosition(uiWindow.id, x - ox, y - oy);
+    setDrag(undefined);
     setOffsets(undefined);
   };
 
+  const props = {
+    isDragInTaskbar: !!drag && drag.y < 100,
+    uiWindow,
+    isDragging: !!offsets
+  };
+
   return (
-    <DragContainer style={getPosition(uiWindow.left, uiWindow.top, drag)}>
-      <StyledWindowContainer
-        isDragging={!!offsets}
-        isDragInTaskbar={!!drag && drag.y < 100}
-        uiWindow={uiWindow}
-        {...rest}
+    <DraggableCore
+      onStart={onStart}
+      onDrag={onDrag}
+      onStop={onStop}
+      handle=".header"
+    >
+      <DragContainer
+        style={getPositionStyle(uiWindow.left, uiWindow.top, drag)}
       >
-        <DraggableCore onStart={onStart} onDrag={onDrag} onStop={onStop}>
-          <StyledWindowHeader
-            isDragging={!!offsets}
-            isDragInTaskbar={!!drag && drag.y < 100}
-            uiWindow={uiWindow}
-          ></StyledWindowHeader>
-        </DraggableCore>
-        <StyledWindowBody
-          isDragging={!!offsets}
-          isDragInTaskbar={!!drag && drag.y < 100}
-          uiWindow={uiWindow}
-        ></StyledWindowBody>
-      </StyledWindowContainer>
-    </DragContainer>
+        <StyledWindowContainer {...props} {...rest}>
+          <StyledWindowHeader {...props} className="header" />
+          <StyledWindowBody {...props} />
+        </StyledWindowContainer>
+      </DragContainer>
+    </DraggableCore>
   );
 };
 
-const DragContainer = styled.span`
+export const DragContainer = styled.span`
   position: absolute;
   left: 0;
   top: 0;
   transition: padding 0.2s;
 `;
 
-const StyledWindowContainer = styled.div<
-  DesktopWindowProps & StyledDesktopWindowProps
->`
+const StyledWindowContainer = styled.div<WindowProps & DragInfoProps>`
   width: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.width)}px;
   height: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.height)}px;
   overflow: hidden;
-  border-radius: ${p => p.theme.desktopWindow.borderRadius};
+  border-radius: ${p =>
+    p.isDragInTaskbar
+      ? p.theme.taskbarIcon.borderRadius
+      : p.theme.desktopWindow.borderRadius};
   display: flex;
   flex-direction: column;
-  transition: width 0.3s, height 0.3s;
+  transition: all 0.3s;
 `;
 
-const StyledWindowHeader = styled.div<
-  DesktopWindowProps & StyledDesktopWindowProps
->`
-  max-height: ${p => p.theme.desktopWindow.headerHeight};
+const StyledWindowHeader = styled.div<WindowProps & DragInfoProps>`
+  max-height: ${p =>
+    p.isDragInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
   flex: auto;
   opacity: ${p => p.theme.desktopWindow.headerOpacity};
   background: ${p => p.uiWindow.color};
+  transition: max-height 0.3s;
 `;
 
-const StyledWindowBody = styled.div<
-  DesktopWindowProps & StyledDesktopWindowProps
->`
+const StyledWindowBody = styled.div<WindowProps & DragInfoProps>`
   flex: auto;
   opacity: ${p => p.theme.desktopWindow.bodyOpacity};
   background: ${p => p.uiWindow.color};
 `;
-
-/* 
-    Positioner
-        container
-            Draggable-header
-            body
-                Draggable-resizer 
-            
-*/

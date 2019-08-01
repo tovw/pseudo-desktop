@@ -1,5 +1,6 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import styled from '../theme';
+import { TaskbarIcon } from './TaskbarIcon';
 
 const StyledTaskbar = styled.div`
   height: ${p =>
@@ -9,5 +10,21 @@ const StyledTaskbar = styled.div`
 `;
 
 export const Taskbar: FC = () => {
-  return <StyledTaskbar></StyledTaskbar>;
+  const [icons, setIcons] = useState([
+    { id: '2', top: 111, left: 231, width: 123, height: 234, color: 'blue' },
+    { id: '3', top: 111, left: 231, width: 123, height: 234, color: 'green' }
+  ]);
+
+  return (
+    <StyledTaskbar>
+      {icons.map((i, o) => (
+        <TaskbarIcon
+          key={i.id}
+          order={o}
+          uiWindow={i}
+          updatePosition={() => void 1}
+        />
+      ))}
+    </StyledTaskbar>
+  );
 };

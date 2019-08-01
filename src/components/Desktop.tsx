@@ -1,7 +1,8 @@
 import React, { FC, useState, useCallback } from 'react';
 import styled from '../theme';
-import { UIWindow, DesktopWindow } from './DesktopWindow';
+import { DesktopWindow } from './DesktopWindow';
 import { Taskbar } from './Taskbar';
+import { UIWindow } from '../utils/types';
 
 const StyledDesktop = styled.div`
   height: 100vh;
