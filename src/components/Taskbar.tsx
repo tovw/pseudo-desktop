@@ -1,6 +1,11 @@
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 import styled from '../theme';
 import { TaskbarIcon } from './TaskbarIcon';
+import {
+  useDesktopState,
+  useDesktopActions,
+  TASKBAR_POSITION_PLACEHOLDER
+} from '../state/desktopContext';
 
 const StyledTaskbar = styled.div`
   height: ${p =>
@@ -10,21 +15,22 @@ const StyledTaskbar = styled.div`
 `;
 
 export const Taskbar: FC = () => {
-  const [icons, setIcons] = useState([
-    { id: '2', top: 111, left: 231, width: 123, height: 234, color: 'blue' },
-    { id: '3', top: 111, left: 231, width: 123, height: 234, color: 'green' }
-  ]);
+  const { taskBarIconOrder, uiWindows } = useDesktopState();
+  const actions = useDesktopActions();
 
   return (
     <StyledTaskbar>
-      {icons.map((i, o) => (
-        <TaskbarIcon
-          key={i.id}
-          order={o}
-          uiWindow={i}
-          updatePosition={() => void 1}
-        />
-      ))}
+      {taskBarIconOrder.map(
+        (id, o) =>
+          id !== TASKBAR_POSITION_PLACEHOLDER && (
+            <TaskbarIcon
+              key={id}
+              order={o}
+              uiWindow={uiWindows[id]}
+              {...actions}
+            />
+          )
+      )}
     </StyledTaskbar>
   );
 };

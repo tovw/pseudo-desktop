@@ -1,8 +1,9 @@
 import React, { FC, useState } from 'react';
 import styled from '../theme';
-import { WindowProps, DragInfoProps, DragHandlesProps } from './DesktopWindow';
+import { WindowProps, DragInfoProps } from './DesktopWindow';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { Maybe, Coordinate } from '../utils/types';
+import { Actions } from '../state/desktopContext';
 
 const StyledTaskbarIcon = styled.div<WindowProps & DragInfoProps>`
   border-radius: ${p =>
@@ -65,28 +66,31 @@ const getPositionStyle = (
   return { transform, paddingTop, transition };
 };
 
-export const TaskbarIcon: FC<
-  WindowProps & DragHandlesProps & { order: number }
-> = ({ updatePosition, order, ...rest }) => {
+export const TaskbarIcon: FC<WindowProps & { order: number } & Actions> = ({
+  order,
+  dragStart,
+  dragEnd,
+  drag: d,
+  ...rest
+}) => {
   const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
   const [drag, setDrag] = useState<Maybe<Coordinate>>();
 
   const onStart: DraggableEventHandler = (e, { x, y }) => {
     console.log(x, y, { x: x - (80 * order + (1 + order) * 10), y: y - 10 });
     setOffsets({ x: x - (80 * order + (1 + order) * 10), y: y - 10 });
+    dragStart(rest.uiWindow.id);
   };
 
   const onDrag: DraggableEventHandler = (e, { x, y }) => {
-    const { x: ox, y: oy } = offsets || { x: 0, y: 0 };
     setDrag({ x, y });
-    updatePosition(rest.uiWindow.id, x - ox, y - oy);
+    d({ x, y });
   };
 
   const onStop: DraggableEventHandler = (e, { x, y }) => {
-    const { x: ox, y: oy } = offsets || { x: 0, y: 0 };
-    updatePosition(rest.uiWindow.id, x - ox, y - oy);
     setDrag(undefined);
     setOffsets(undefined);
+    dragEnd({ x, y });
   };
 
   const props = {

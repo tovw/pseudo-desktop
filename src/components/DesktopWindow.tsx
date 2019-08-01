@@ -2,13 +2,10 @@ import React, { FC, useState } from 'react';
 import styled from '../theme';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { UIWindow, Maybe, Coordinate } from '../utils/types';
+import { Actions } from '../state/desktopContext';
 
 export interface WindowProps {
   uiWindow: UIWindow;
-}
-
-export interface DragHandlesProps {
-  updatePosition: (id: string, top: number, left: number) => void;
 }
 
 export interface DragInfoProps {
@@ -16,49 +13,60 @@ export interface DragInfoProps {
   isDragInTaskbar: boolean;
 }
 
+export interface ZIndexProps {
+  zIndex: number;
+}
+
 const getPositionStyle = (
   left: number,
   top: number,
-  drag: Maybe<{ y: number; x: number }>
+  drag: Maybe<Coordinate>,
+  offsets: Maybe<Coordinate>
 ) => {
   let transform = `translateX(${left}px) translateY(${top}px)`,
     paddingLeft = 0;
 
-  if (drag && drag.y < 100) {
-    transform = `translateX(${left}px) translateY(${10}px)`;
-    paddingLeft = drag.x - left - 40;
+  if (drag && offsets) {
+    if (drag.y < 100) {
+      transform = `translateX(${drag.x - offsets.x}px) translateY(${10}px)`;
+      paddingLeft = offsets.x - 40;
+    } else {
+      transform = `translateX(${drag.x - offsets.x}px) translateY(${drag.y -
+        offsets.y}px)`;
+    }
   }
   return { transform, paddingLeft };
 };
 
-export const DesktopWindow: FC<WindowProps & DragHandlesProps> = ({
+export const DesktopWindow: FC<WindowProps & Actions & ZIndexProps> = ({
   uiWindow,
-  updatePosition,
+  drag,
+  dragStart,
+  dragEnd,
   ...rest
 }) => {
   const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
-  const [drag, setDrag] = useState<Maybe<Coordinate>>();
+  const [dragCoordinate, setDrag] = useState<Maybe<Coordinate>>();
 
   const onStart: DraggableEventHandler = (e, { x, y }) => {
     setOffsets({ x: x - uiWindow.left, y: y - uiWindow.top });
-    console.log('start');
+    dragStart(uiWindow.id);
   };
 
   const onDrag: DraggableEventHandler = (e, { x, y }) => {
-    const { x: ox, y: oy } = offsets || { x: 0, y: 0 };
     setDrag({ x, y });
-    updatePosition(uiWindow.id, x - ox, y - oy);
+    drag({ x, y });
   };
 
   const onStop: DraggableEventHandler = (e, { x, y }) => {
     const { x: ox, y: oy } = offsets || { x: 0, y: 0 };
-    updatePosition(uiWindow.id, x - ox, y - oy);
+    dragEnd({ x: x - ox, y: y - oy });
     setDrag(undefined);
     setOffsets(undefined);
   };
 
   const props = {
-    isDragInTaskbar: !!drag && drag.y < 100,
+    isDragInTaskbar: !!dragCoordinate && dragCoordinate.y < 100,
     uiWindow,
     isDragging: !!offsets
   };
@@ -71,7 +79,12 @@ export const DesktopWindow: FC<WindowProps & DragHandlesProps> = ({
       handle=".header"
     >
       <DragContainer
-        style={getPositionStyle(uiWindow.left, uiWindow.top, drag)}
+        style={getPositionStyle(
+          uiWindow.left,
+          uiWindow.top,
+          dragCoordinate,
+          offsets
+        )}
       >
         <StyledWindowContainer {...props} {...rest}>
           <StyledWindowHeader {...props} className="header" />
@@ -89,10 +102,13 @@ export const DragContainer = styled.span`
   transition: padding 0.2s;
 `;
 
-const StyledWindowContainer = styled.div<WindowProps & DragInfoProps>`
+const StyledWindowContainer = styled.div<
+  WindowProps & DragInfoProps & ZIndexProps
+>`
   width: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.width)}px;
   height: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.height)}px;
   overflow: hidden;
+  z-index: ${p => p.zIndex};
   border-radius: ${p =>
     p.isDragInTaskbar
       ? p.theme.taskbarIcon.borderRadius

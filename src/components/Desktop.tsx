@@ -1,8 +1,8 @@
-import React, { FC, useState, useCallback } from 'react';
+import React, { FC } from 'react';
 import styled from '../theme';
 import { DesktopWindow } from './DesktopWindow';
 import { Taskbar } from './Taskbar';
-import { UIWindow } from '../utils/types';
+import { useDesktopState, useDesktopActions } from '../state/desktopContext';
 
 const StyledDesktop = styled.div`
   height: 100vh;
@@ -12,35 +12,18 @@ const StyledDesktop = styled.div`
 `;
 
 export const Desktop: FC = () => {
-  const [apps, setApps] = useState<UIWindow[]>([
-    {
-      id: '1',
-      left: 100,
-      top: 100,
-      width: 300,
-      height: 300,
-      color: 'papayawhip'
-    }
-  ]);
-
-  const updatePosition = useCallback(
-    (id: string, left: number, top: number) => {
-      setApps([
-        ...apps.filter(w => w.id !== id),
-        { ...apps.find(w => w.id === id)!, left, top }
-      ]);
-    },
-    [setApps]
-  );
+  const { uiWindows, desktopZindexes } = useDesktopState();
+  const actions = useDesktopActions();
 
   return (
     <StyledDesktop>
-      <Taskbar></Taskbar>
-      {apps.map(w => (
+      <Taskbar />
+      {desktopZindexes.map((id, idx) => (
         <DesktopWindow
-          key={w.id}
-          uiWindow={w}
-          updatePosition={updatePosition}
+          key={id}
+          uiWindow={uiWindows[id]}
+          zIndex={idx}
+          {...actions}
         />
       ))}
     </StyledDesktop>
