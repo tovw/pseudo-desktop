@@ -1,9 +1,9 @@
 import React, { FC, useState } from 'react';
-import styled from '../theme';
-import { WindowProps, DragInfoProps } from './DesktopWindow';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
-import { Maybe, Coordinate } from '../utils/types';
 import { Actions } from '../state/desktopContext';
+import styled from '../theme';
+import { Coordinate, Maybe } from '../utils/types';
+import { DragInfoProps, WindowProps } from './DesktopWindow';
 
 const StyledTaskbarIcon = styled.div<WindowProps & DragInfoProps>`
   border-radius: ${p =>
@@ -13,11 +13,11 @@ const StyledTaskbarIcon = styled.div<WindowProps & DragInfoProps>`
   height: ${p =>
     !p.isDragging || p.isDragInTaskbar
       ? p.theme.taskbarIcon.iconSideLength
-      : 200}px;
+      : p.uiWindow.height}px;
   width: ${p =>
     !p.isDragging || p.isDragInTaskbar
       ? p.theme.taskbarIcon.iconSideLength
-      : 200}px;
+      : p.uiWindow.width}px;
   overflow: hidden;
   position: absolute;
   display: flex;
@@ -88,9 +88,9 @@ export const TaskbarIcon: FC<WindowProps & { order: number } & Actions> = ({
   };
 
   const onStop: DraggableEventHandler = (e, { x, y }) => {
+    dragEnd({ x, y }, offsets || { x: 0, y: 0 });
     setDrag(undefined);
     setOffsets(undefined);
-    dragEnd({ x, y });
   };
 
   const props = {

@@ -1,12 +1,12 @@
+import move from 'array-move';
 import React, {
   createContext,
-  useReducer,
-  useState,
   FC,
-  useContext
+  useContext,
+  useReducer,
+  useState
 } from 'react';
-import { UIWindow, Maybe, Coordinate, Dimensions } from '../utils/types';
-import move from 'array-move';
+import { Coordinate, Dimensions, Maybe, UIWindow } from '../utils/types';
 
 export interface DesktopState {
   uiWindows: Record<string, UIWindow>;
@@ -73,7 +73,10 @@ export enum ActionTypes {
 export type Action =
   | { type: ActionTypes.DRAG_START; payload: { id: string } }
   | { type: ActionTypes.DRAG; payload: { coordinate: Coordinate } }
-  | { type: ActionTypes.DRAG_END; payload: { coordinate: Coordinate } };
+  | {
+      type: ActionTypes.DRAG_END;
+      payload: { coordinate: Coordinate; offsets: Coordinate };
+    };
 
 const assertNever = (x: never): never => {
   throw new Error('Invalid Action: ' + x);
@@ -138,13 +141,21 @@ const adjustTaskbarIconOrder = (state: DesktopState, drag: Coordinate) => {
   }
 };
 
-const updateWindowPosition = (uiWindow: UIWindow, coordinate: Coordinate) => ({
+const updateWindowPosition = (
+  uiWindow: UIWindow,
+  coordinate: Coordinate,
+  offsets: Coordinate
+) => ({
   ...uiWindow,
-  left: coordinate.x,
-  top: coordinate.y
+  left: coordinate.x - offsets.x,
+  top: coordinate.y - offsets.y
 });
 
-const dragEnd = (state: DesktopState, drag: Coordinate) => {
+const dragEnd = (
+  state: DesktopState,
+  drag: Coordinate,
+  offsets: Coordinate
+) => {
   if (!state.draggingWindowId) return state;
   //from bar to desktop
   const {
@@ -167,7 +178,14 @@ const dragEnd = (state: DesktopState, drag: Coordinate) => {
       newZindexes = desktopZindexes.filter(id => id !== draggingWindowId);
     } else {
       //upadte top,left
-      newWindow = updateWindowPosition(state.uiWindows[draggingWindowId], drag);
+      newOrder = taskBarIconOrder.filter(
+        id => id !== TASKBAR_POSITION_PLACEHOLDER
+      );
+      newWindow = updateWindowPosition(
+        state.uiWindows[draggingWindowId],
+        drag,
+        offsets
+      );
     }
   } else {
     if (releaseInTaskbar) {
@@ -178,7 +196,11 @@ const dragEnd = (state: DesktopState, drag: Coordinate) => {
       //zindexes push
       newZindexes = [...desktopZindexes, draggingWindowId];
       //updateTopLeft
-      newWindow = updateWindowPosition(state.uiWindows[draggingWindowId], drag);
+      newWindow = updateWindowPosition(
+        state.uiWindows[draggingWindowId],
+        drag,
+        offsets
+      );
     }
   }
   return {
@@ -220,7 +242,7 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
     case ActionTypes.DRAG_END:
       return {
         ...state,
-        ...dragEnd(state, action.payload.coordinate),
+        ...dragEnd(state, action.payload.coordinate, action.payload.offsets),
         draggingWindowId: undefined
       };
     default:
@@ -234,7 +256,7 @@ const DesktopDispatchContext = createContext<Maybe<Actions>>(null);
 export interface Actions {
   dragStart: (id: string) => void;
   drag: (coordinate: Coordinate) => void;
-  dragEnd: (coordinate: Coordinate) => void;
+  dragEnd: (coordinate: Coordinate, offsets: Coordinate) => void;
 }
 
 export const DesktopStateProvider: FC = ({ children }) => {
@@ -244,8 +266,8 @@ export const DesktopStateProvider: FC = ({ children }) => {
       dispatch({ type: ActionTypes.DRAG_START, payload: { id } }),
     drag: (coordinate: Coordinate) =>
       dispatch({ type: ActionTypes.DRAG, payload: { coordinate } }),
-    dragEnd: (coordinate: Coordinate) =>
-      dispatch({ type: ActionTypes.DRAG_END, payload: { coordinate } })
+    dragEnd: (coordinate: Coordinate, offsets: Coordinate) =>
+      dispatch({ type: ActionTypes.DRAG_END, payload: { coordinate, offsets } })
   });
 
   return (

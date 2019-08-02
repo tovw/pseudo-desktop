@@ -1,8 +1,8 @@
 import React, { FC, useState } from 'react';
-import styled from '../theme';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
-import { UIWindow, Maybe, Coordinate } from '../utils/types';
 import { Actions } from '../state/desktopContext';
+import styled from '../theme';
+import { Coordinate, Maybe, UIWindow } from '../utils/types';
 
 export interface WindowProps {
   uiWindow: UIWindow;
@@ -59,8 +59,7 @@ export const DesktopWindow: FC<WindowProps & Actions & ZIndexProps> = ({
   };
 
   const onStop: DraggableEventHandler = (e, { x, y }) => {
-    const { x: ox, y: oy } = offsets || { x: 0, y: 0 };
-    dragEnd({ x: x - ox, y: y - oy });
+    dragEnd({ x, y }, offsets || { x: 0, y: 0 });
     setDrag(undefined);
     setOffsets(undefined);
   };
