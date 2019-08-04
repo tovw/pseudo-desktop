@@ -40,6 +40,7 @@ const getPositionStyle = (
 
 export const DesktopWindow: FC<WindowProps & Actions & ZIndexProps> = ({
   uiWindow,
+  uiWindow: { left, top, id },
   drag,
   dragStart,
   dragEnd,
@@ -49,8 +50,8 @@ export const DesktopWindow: FC<WindowProps & Actions & ZIndexProps> = ({
   const [dragCoordinate, setDrag] = useState<Maybe<Coordinate>>();
 
   const onStart: DraggableEventHandler = (e, { x, y }) => {
-    setOffsets({ x: x - uiWindow.left, y: y - uiWindow.top });
-    dragStart(uiWindow.id);
+    setOffsets({ x: x - left, y: y - top });
+    dragStart(id);
   };
 
   const onDrag: DraggableEventHandler = (e, { x, y }) => {
@@ -78,12 +79,7 @@ export const DesktopWindow: FC<WindowProps & Actions & ZIndexProps> = ({
       handle=".header"
     >
       <DragContainer
-        style={getPositionStyle(
-          uiWindow.left,
-          uiWindow.top,
-          dragCoordinate,
-          offsets
-        )}
+        style={getPositionStyle(left, top, dragCoordinate, offsets)}
       >
         <StyledWindowContainer {...props} {...rest}>
           <StyledWindowHeader {...props} className="header" />

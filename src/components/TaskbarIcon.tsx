@@ -1,7 +1,8 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useContext, useState } from 'react';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
+import { ThemeContext } from 'styled-components';
 import { Actions } from '../state/desktopContext';
-import styled from '../theme';
+import styled, { Theme } from '../theme';
 import { Coordinate, Maybe } from '../utils/types';
 import { DragInfoProps, WindowProps } from './DesktopWindow';
 
@@ -49,21 +50,19 @@ const getPositionStyle = (
 ) => {
   let transform = `translateX(${80 * index +
       (1 + index) * 10}px) translateY(${10}px)`,
-    paddingTop = 0,
-    transition = 'padding 0.2s, transform 0.2s';
+    transition = 'transform 0.2s';
 
   if (drag && offsets) {
-    transition = 'padding 0.2s';
+    transition = '';
     if (drag.y > 100) {
-      paddingTop = offsets.y - 10;
       transform = `translateX(${drag.x - offsets.x}px) translateY(${drag.y -
-        offsets.y}px)`;
+        10}px)`;
     } else {
       console.log(drag.x, offsets.x, drag.x - offsets.x);
       transform = `translateX(${drag.x - offsets.x}px) translateY(${10}px)`;
     }
   }
-  return { transform, paddingTop, transition };
+  return { transform, transition };
 };
 
 export const TaskbarIcon: FC<WindowProps & { order: number } & Actions> = ({
@@ -75,10 +74,15 @@ export const TaskbarIcon: FC<WindowProps & { order: number } & Actions> = ({
 }) => {
   const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
   const [drag, setDrag] = useState<Maybe<Coordinate>>();
+  const {
+    taskbarIcon: { iconSideLength, iconMargin }
+  } = useContext<Theme>(ThemeContext);
 
   const onStart: DraggableEventHandler = (e, { x, y }) => {
-    console.log(x, y, { x: x - (80 * order + (1 + order) * 10), y: y - 10 });
-    setOffsets({ x: x - (80 * order + (1 + order) * 10), y: y - 10 });
+    setOffsets({
+      x: x - (iconSideLength * order + (1 + order) * iconMargin),
+      y: y - iconMargin
+    });
     dragStart(rest.uiWindow.id);
   };
 
@@ -88,13 +92,14 @@ export const TaskbarIcon: FC<WindowProps & { order: number } & Actions> = ({
   };
 
   const onStop: DraggableEventHandler = (e, { x, y }) => {
-    dragEnd({ x, y }, offsets || { x: 0, y: 0 });
+    if (!offsets) return;
+    dragEnd({ x, y }, { x: offsets.x, y: iconMargin });
     setDrag(undefined);
     setOffsets(undefined);
   };
 
   const props = {
-    isDragInTaskbar: !!drag && drag.y < 100,
+    isDragInTaskbar: !!drag && drag.y < 2 * iconMargin + iconSideLength,
 
     isDragging: !!offsets
   };
