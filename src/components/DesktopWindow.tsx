@@ -3,6 +3,7 @@ import { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { Actions } from '../state/desktopContext';
 import styled from '../theme';
 import { Coordinate, Maybe, UIWindow } from '../utils/types';
+import { DragContainer } from './DragContainer';
 
 export interface WindowProps {
   uiWindow: UIWindow;
@@ -18,12 +19,11 @@ export interface ZIndexProps {
 }
 
 const getPositionStyle = (
-  left: number,
-  top: number,
+  { x, y }: Coordinate,
   drag: Maybe<Coordinate>,
   offsets: Maybe<Coordinate>
 ) => {
-  let transform = `translateX(${left}px) translateY(${top}px)`,
+  let transform = `translateX(${x}px) translateY(${y}px)`,
     paddingLeft = 0;
 
   if (drag && offsets) {
@@ -40,7 +40,7 @@ const getPositionStyle = (
 
 export const DesktopWindow: FC<WindowProps & Actions & ZIndexProps> = ({
   uiWindow,
-  uiWindow: { left, top, id },
+  uiWindow: { topLeftPosition, id },
   drag,
   dragStart,
   dragEnd,
@@ -50,7 +50,7 @@ export const DesktopWindow: FC<WindowProps & Actions & ZIndexProps> = ({
   const [dragCoordinate, setDrag] = useState<Maybe<Coordinate>>();
 
   const onStart: DraggableEventHandler = (e, { x, y }) => {
-    setOffsets({ x: x - left, y: y - top });
+    setOffsets({ x: x - topLeftPosition.x, y: y - topLeftPosition.y });
     dragStart(id);
   };
 
@@ -79,7 +79,7 @@ export const DesktopWindow: FC<WindowProps & Actions & ZIndexProps> = ({
       handle=".header"
     >
       <DragContainer
-        style={getPositionStyle(left, top, dragCoordinate, offsets)}
+        style={getPositionStyle(topLeftPosition, dragCoordinate, offsets)}
       >
         <StyledWindowContainer {...props} {...rest}>
           <StyledWindowHeader {...props} className="header" />
@@ -90,18 +90,11 @@ export const DesktopWindow: FC<WindowProps & Actions & ZIndexProps> = ({
   );
 };
 
-export const DragContainer = styled.span`
-  position: absolute;
-  left: 0;
-  top: 0;
-  transition: padding 0.2s;
-`;
-
 const StyledWindowContainer = styled.div<
   WindowProps & DragInfoProps & ZIndexProps
 >`
-  width: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.width)}px;
-  height: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.height)}px;
+  width: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.dimensions.width)}px;
+  height: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.dimensions.height)}px;
   overflow: hidden;
   z-index: ${p => p.zIndex};
   border-radius: ${p =>

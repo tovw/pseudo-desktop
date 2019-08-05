@@ -4,7 +4,8 @@ import React, {
   FC,
   useContext,
   useReducer,
-  useState
+  useState,
+  useMemo
 } from 'react';
 import { Coordinate, Dimensions, Maybe, UIWindow } from '../utils/types';
 
@@ -31,35 +32,31 @@ const initialState: DesktopState = {
   uiWindows: {
     '1': {
       id: '1',
-      left: 100,
-      top: 100,
-      width: 300,
-      height: 300,
-      color: 'papayawhip'
+      topLeftPosition: { x: 100, y: 100 },
+      dimensions: { width: 300, height: 300 },
+      color: 'papayawhip',
+      animateInFrom: undefined
     },
     '2': {
       id: '2',
-      top: 111,
-      left: 231,
-      width: 123,
-      height: 234,
-      color: 'blue'
+      topLeftPosition: { y: 111, x: 231 },
+      dimensions: { width: 123, height: 234 },
+      color: 'blue',
+      animateInFrom: undefined
     },
     '3': {
       id: '3',
-      top: 111,
-      left: 231,
-      width: 123,
-      height: 234,
-      color: 'green'
+      topLeftPosition: { y: 111, x: 231 },
+      dimensions: { width: 123, height: 234 },
+      color: 'green',
+      animateInFrom: undefined
     },
     '4': {
       id: '4',
-      top: 221,
-      left: 291,
-      width: 90,
-      height: 400,
-      color: 'purple'
+      topLeftPosition: { y: 221, x: 291 },
+      dimensions: { width: 90, height: 400 },
+      color: 'purple',
+      animateInFrom: undefined
     }
   }
 };
@@ -147,8 +144,10 @@ const updateWindowPosition = (
   offsets: Coordinate
 ) => ({
   ...uiWindow,
-  left: coordinate.x - offsets.x,
-  top: coordinate.y - offsets.y
+  topLeftPosition: {
+    x: coordinate.x - offsets.x,
+    y: coordinate.y - offsets.y
+  }
 });
 
 const dragEnd = (
@@ -176,6 +175,13 @@ const dragEnd = (
         id !== TASKBAR_POSITION_PLACEHOLDER ? id : draggingWindowId
       );
       newZindexes = desktopZindexes.filter(id => id !== draggingWindowId);
+      newWindow = {
+        ...state.uiWindows[draggingWindowId],
+        animateInFrom: {
+          x: drag.x - Math.min(offsets.x, l / 2),
+          y: m
+        }
+      };
     } else {
       //upadte top,left
       newOrder = taskBarIconOrder.filter(
@@ -261,14 +267,22 @@ export interface Actions {
 
 export const DesktopStateProvider: FC = ({ children }) => {
   const [state, dispatch] = useReducer(desktopReducer, initialState);
-  const [actions] = useState<Actions>({
-    dragStart: (id: string) =>
-      dispatch({ type: ActionTypes.DRAG_START, payload: { id } }),
-    drag: (coordinate: Coordinate) =>
-      dispatch({ type: ActionTypes.DRAG, payload: { coordinate } }),
-    dragEnd: (coordinate: Coordinate, offsets: Coordinate) =>
-      dispatch({ type: ActionTypes.DRAG_END, payload: { coordinate, offsets } })
-  });
+  const actions = useMemo<Actions>(
+    () => ({
+      dragStart: (id: string) =>
+        dispatch({ type: ActionTypes.DRAG_START, payload: { id } }),
+
+      drag: (coordinate: Coordinate) =>
+        dispatch({ type: ActionTypes.DRAG, payload: { coordinate } }),
+
+      dragEnd: (coordinate: Coordinate, offsets: Coordinate) =>
+        dispatch({
+          type: ActionTypes.DRAG_END,
+          payload: { coordinate, offsets }
+        })
+    }),
+    [dispatch]
+  );
 
   return (
     <DesktopStateContext.Provider value={state}>
