@@ -3,11 +3,11 @@ import React, {
   createContext,
   FC,
   useContext,
-  useReducer,
-  useMemo
+  useMemo,
+  useReducer
 } from 'react';
-import { Coordinate, Dimensions, Maybe, UIWindow } from '../utils/types';
 import { dragIsInPreviewTriggerArea } from '../utils/dragIsInTriggerArea';
+import { Coordinate, Dimensions, Maybe, UIWindow } from '../utils/types';
 
 export interface DesktopState {
   uiWindows: Record<string, UIWindow>;
@@ -42,14 +42,14 @@ const initialState: DesktopState = {
   uiWindows: {
     '1': {
       id: '1',
-      topLeftPosition: { x: 100, y: 100 },
+      topLeftPosition: { x: 100, y: 200 },
       dimensions: { width: 300, height: 300 },
       color: 'papayawhip',
       animateInFrom: undefined
     },
     '2': {
       id: '2',
-      topLeftPosition: { y: 111, x: 231 },
+      topLeftPosition: { y: 311, x: 231 },
       dimensions: { width: 123, height: 234 },
       color: 'blue',
       animateInFrom: undefined
@@ -156,14 +156,27 @@ const adjustTaskbarIconOrder = (state: DesktopState, drag: Coordinate) => {
 const updateWindowPosition = (
   uiWindow: UIWindow,
   coordinate: Coordinate,
-  offsets: Coordinate
-) => ({
-  ...uiWindow,
-  topLeftPosition: {
-    x: coordinate.x - offsets.x,
-    y: coordinate.y - offsets.y
-  }
-});
+  offsets: Coordinate,
+  dragPreview: Maybe<{
+    dimensions: Dimensions;
+    triggeredFrom: Coordinate;
+    toCoordinate: Coordinate;
+  }>
+) => {
+  return dragPreview
+    ? {
+        ...uiWindow,
+        topLeftPosition: dragPreview.toCoordinate,
+        dimensions: dragPreview.dimensions
+      }
+    : {
+        ...uiWindow,
+        topLeftPosition: {
+          x: coordinate.x - offsets.x,
+          y: coordinate.y - offsets.y
+        }
+      };
+};
 
 const dragEnd = (
   state: DesktopState,
@@ -202,10 +215,12 @@ const dragEnd = (
       newOrder = taskBarIconOrder.filter(
         id => id !== TASKBAR_POSITION_PLACEHOLDER
       );
+
       newWindow = updateWindowPosition(
         state.uiWindows[draggingWindowId],
         drag,
-        offsets
+        offsets,
+        state.showResizePreview
       );
     }
   } else {
@@ -220,7 +235,8 @@ const dragEnd = (
       newWindow = updateWindowPosition(
         state.uiWindows[draggingWindowId],
         drag,
-        offsets
+        offsets,
+        state.showResizePreview
       );
     }
   }
@@ -271,7 +287,8 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
       return {
         ...state,
         ...dragEnd(state, action.payload.coordinate, action.payload.offsets),
-        draggingWindowId: undefined
+        draggingWindowId: undefined,
+        showResizePreview: undefined
       };
 
     case ActionTypes.SET_DESKTOP_DIMENSIONS:

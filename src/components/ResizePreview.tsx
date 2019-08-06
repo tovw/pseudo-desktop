@@ -1,17 +1,18 @@
 import React, {
+  CSSProperties,
   FC,
-  useState,
+  memo,
   useEffect,
   useRef,
-  memo,
-  CSSProperties
+  useState
 } from 'react';
-import { Dimensions, Coordinate, Maybe } from '../utils/types';
-
 import styled from '../theme';
+import { Coordinate, Dimensions, Maybe } from '../utils/types';
 
 const StyledResizePreview = styled.div`
   position: absolute;
+  left: 0;
+  top: 0;
   width: 0px;
   height: 0px;
   transition: all 0.3s ease-out;
@@ -54,11 +55,6 @@ export const ResizePreview: FC<{
           showResizePreview.toCoordinate
         )
     : getResizePreviewPositionStyles({}, previousOrigin.current);
-
-  console.log(
-    showResizePreview && showResizePreview.triggeredFrom,
-    showResizePreview && showResizePreview.toCoordinate
-  );
 
   const hasResizePreview = !!showResizePreview;
   useEffect(() => {

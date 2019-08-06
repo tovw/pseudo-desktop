@@ -23,9 +23,10 @@ export const dragIsInPreviewTriggerArea = (
   const topSide = y < taskbarBottomEdge + sideTriggerAreaSide;
   const underTopBar = y > taskbarBottomEdge;
 
+  //top-left
   if (leftCorner && topCorner && underTopBar) {
     return {
-      toCoordinate: { x: 0, y: 0 },
+      toCoordinate: { x: 0, y: taskbarBottomEdge },
       dimensions: { width: w / 2, height: (h - taskbarBottomEdge) / 2 },
       triggeredFrom
     };
@@ -34,7 +35,7 @@ export const dragIsInPreviewTriggerArea = (
     return {
       toCoordinate: {
         x: 0,
-        y: (h - taskbarBottomEdge) / 2
+        y: (h - taskbarBottomEdge) / 2 + taskbarBottomEdge
       },
       dimensions: { width: w / 2, height: (h - taskbarBottomEdge) / 2 },
       triggeredFrom
@@ -42,7 +43,7 @@ export const dragIsInPreviewTriggerArea = (
     //left-side
   } else if (leftSide && underTopBar) {
     return {
-      toCoordinate: { x: 0, y: 0 },
+      toCoordinate: { x: 0, y: taskbarBottomEdge },
       dimensions: { width: w / 2, height: h - taskbarBottomEdge },
       triggeredFrom
     };
@@ -51,7 +52,7 @@ export const dragIsInPreviewTriggerArea = (
     return {
       toCoordinate: {
         x: w / 2,
-        y: (h - taskbarBottomEdge) / 2
+        y: (h - taskbarBottomEdge) / 2 + taskbarBottomEdge
       },
       dimensions: { width: w / 2, height: (h - taskbarBottomEdge) / 2 },
       triggeredFrom
@@ -59,14 +60,14 @@ export const dragIsInPreviewTriggerArea = (
     //top-right
   } else if (rightCorner && topCorner && underTopBar) {
     return {
-      toCoordinate: { x: w / 2, y: 0 },
+      toCoordinate: { x: w / 2, y: taskbarBottomEdge },
       dimensions: { width: w / 2, height: (h - taskbarBottomEdge) / 2 },
       triggeredFrom
     };
     //right-side
   } else if (rightSide && underTopBar) {
     return {
-      toCoordinate: { x: w / 2, y: 0 },
+      toCoordinate: { x: w / 2, y: taskbarBottomEdge },
       dimensions: { width: w / 2, height: h - taskbarBottomEdge },
       triggeredFrom
     };
@@ -75,7 +76,7 @@ export const dragIsInPreviewTriggerArea = (
     return {
       toCoordinate: {
         x: 0,
-        y: (h - taskbarBottomEdge) / 2
+        y: (h - taskbarBottomEdge) / 2 + taskbarBottomEdge
       },
       dimensions: { width: w, height: (h - taskbarBottomEdge) / 2 },
       triggeredFrom
@@ -83,7 +84,7 @@ export const dragIsInPreviewTriggerArea = (
     //top
   } else if (underTopBar && topSide) {
     return {
-      toCoordinate: { x: 0, y: 0 },
+      toCoordinate: { x: 0, y: taskbarBottomEdge },
       dimensions: { width: w, height: h - taskbarBottomEdge },
       triggeredFrom
     };
