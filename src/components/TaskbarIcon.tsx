@@ -4,10 +4,10 @@ import { ThemeContext } from 'styled-components';
 import { Actions } from '../state/desktopContext';
 import styled, { Theme } from '../theme';
 import { Coordinate, Maybe } from '../utils/types';
-import { DragInfoProps, WindowProps } from './DesktopWindow';
+import { DragInfoProps, UIWindowProps, OrderProps } from './DesktopWindow';
 import { DragContainer } from './DragContainer';
 
-const StyledTaskbarIcon = styled.div<WindowProps & DragInfoProps>`
+const StyledTaskbarIcon = styled.div<UIWindowProps & DragInfoProps>`
   border-radius: ${p =>
     !p.isDragging || p.isDragInTaskbar
       ? p.theme.taskbarIcon.borderRadius
@@ -27,7 +27,7 @@ const StyledTaskbarIcon = styled.div<WindowProps & DragInfoProps>`
   position: absolute;
   display: flex;
   flex-direction: column;
-  z-index: ${p => (p.isDragging ? 99 : 0)};
+
   transition: width 0.2s, height 0.2s;
 
   > * {
@@ -47,58 +47,61 @@ const StyledTaskbarIcon = styled.div<WindowProps & DragInfoProps>`
   }
 `;
 
-const getPositionStyle = (
-  index: number,
+const getTaskbarPositionStyle = (
+  order: number,
   drag: Maybe<{ y: number; x: number }>,
-  offsets: Maybe<{ y: number; x: number }>
+  offsets: Maybe<{ y: number; x: number }>,
+  taskbarIconMargin: number,
+  taskbarIconSideLength: number
 ) => {
-  let transform = `translateX(${80 * index +
-      (1 + index) * 10}px) translateY(${10}px)`,
-    transition = 'transform 0.2s ease-in-out';
+  const dragInTaskbar =
+    drag && drag.y < 2 * taskbarIconMargin + taskbarIconSideLength;
 
-  if (drag && offsets) {
-    transition = '';
-    if (drag.y > 100) {
-      transform = `translateX(${drag.x - offsets.x}px) translateY(${drag.y -
-        10}px)`;
-    } else {
-      console.log(drag.x, offsets.x, drag.x - offsets.x);
-      transform = `translateX(${drag.x - offsets.x}px) translateY(${10}px)`;
-    }
-  }
-  return { transform, transition };
+  const tx =
+    drag && offsets
+      ? drag.x - offsets.x
+      : taskbarIconSideLength * order + (1 + order) * taskbarIconMargin;
+
+  const ty =
+    !drag || dragInTaskbar ? taskbarIconMargin : drag.y - taskbarIconMargin;
+
+  const transform = `translateX(${tx}px) translateY(${ty}px)`;
+  const transition = drag ? '' : 'transform 0.2s ease-in-out';
+  const zIndex = drag ? 99 : undefined;
+
+  return { transform, transition, zIndex };
 };
 
-export const TaskbarIcon: FC<WindowProps & { order: number } & Actions> = memo(
-  ({ order, dragStart, dragEnd, drag: d, ...rest }) => {
+export const TaskbarIcon: FC<UIWindowProps & OrderProps & Actions> = memo(
+  ({ order, dragStart, dragEnd, drag: d, uiWindow }) => {
     const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
     const [drag, setDrag] = useState<Maybe<Coordinate>>();
     const {
       taskbarIcon: { iconSideLength, iconMargin }
     } = useContext<Theme>(ThemeContext);
 
-    const onStart: DraggableEventHandler = (e, { x, y }) => {
+    const onStart: DraggableEventHandler = (_, { x, y }) => {
       setOffsets({
         x: x - (iconSideLength * order + (1 + order) * iconMargin),
         y: y - iconMargin
       });
       setDrag({ x, y });
-      dragStart(rest.uiWindow.id);
+      dragStart(uiWindow.id);
     };
 
-    const onDrag: DraggableEventHandler = (e, { x, y }) => {
+    const onDrag: DraggableEventHandler = (_, { x, y }) => {
       setDrag({ x, y });
       d({ x, y });
     };
 
-    const onStop: DraggableEventHandler = (e, { x, y }) => {
+    const onStop: DraggableEventHandler = (_, { x, y }) => {
       if (!offsets) return;
       dragEnd({ x, y }, { x: offsets.x, y: iconMargin });
       setDrag(undefined);
       setOffsets(undefined);
     };
 
-    const props = {
+    const dragInfoProps = {
       isDragInTaskbar: !!drag && drag.y < 2 * iconMargin + iconSideLength,
       isDragging: !!offsets
     };
@@ -106,12 +109,18 @@ export const TaskbarIcon: FC<WindowProps & { order: number } & Actions> = memo(
     const [animateInTimeout, setA] = useState(true);
 
     let positionStyle =
-      animateInTimeout && rest.uiWindow.animateInFrom
+      animateInTimeout && uiWindow.animateInFrom
         ? {
-            transform: `translateX(${rest.uiWindow.animateInFrom.x}px) translateY(10px)`,
+            transform: `translateX(${uiWindow.animateInFrom.x}px) translateY(10px)`,
             transition: '0.2s ease-in-out'
           }
-        : getPositionStyle(order, drag, offsets);
+        : getTaskbarPositionStyle(
+            order,
+            drag,
+            offsets,
+            iconMargin,
+            iconSideLength
+          );
 
     useEffect(() => {
       setTimeout(() => setA(false), 0);
@@ -119,8 +128,8 @@ export const TaskbarIcon: FC<WindowProps & { order: number } & Actions> = memo(
 
     return (
       <DraggableCore onStart={onStart} onDrag={onDrag} onStop={onStop}>
-        <DragContainer isDragging={!!offsets} style={positionStyle}>
-          <StyledTaskbarIcon {...props} {...rest}>
+        <DragContainer style={positionStyle}>
+          <StyledTaskbarIcon {...dragInfoProps} uiWindow={uiWindow}>
             <div></div>
             <div></div>
           </StyledTaskbarIcon>

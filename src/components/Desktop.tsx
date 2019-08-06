@@ -18,13 +18,8 @@ export const Desktop: FC = () => {
   return (
     <StyledDesktop>
       <Taskbar />
-      {desktopZindexes.map((id, idx) => (
-        <DesktopWindow
-          key={id}
-          uiWindow={uiWindows[id]}
-          zIndex={idx}
-          {...actions}
-        />
+      {desktopZindexes.map(id => (
+        <DesktopWindow key={id} uiWindow={uiWindows[id]} {...actions} />
       ))}
     </StyledDesktop>
   );

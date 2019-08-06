@@ -4,7 +4,6 @@ import React, {
   FC,
   useContext,
   useReducer,
-  useState,
   useMemo
 } from 'react';
 import { Coordinate, Dimensions, Maybe, UIWindow } from '../utils/types';
