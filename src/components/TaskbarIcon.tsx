@@ -72,6 +72,37 @@ const getTaskbarPositionStyle = (
   return { transform, transition, zIndex };
 };
 
+const useTaskbarPositionStyle = (
+  order: number,
+  drag: Maybe<Coordinate>,
+  offsets: Maybe<Coordinate>,
+  animateIn: Maybe<Coordinate>,
+  taskbarIconMargin: number,
+  taskbarIconSideLength: number
+) => {
+  const [isFirstRender, setIsFirstRender] = useState(true);
+
+  const positionStyle =
+    isFirstRender && animateIn
+      ? {
+          transform: `translateX(${animateIn.x}px) translateY(${taskbarIconMargin}px)`,
+          transition: 'transform 0.2s ease-in-out'
+        }
+      : getTaskbarPositionStyle(
+          order,
+          drag,
+          offsets,
+          taskbarIconMargin,
+          taskbarIconSideLength
+        );
+
+  useEffect(() => {
+    setTimeout(() => setIsFirstRender(false), 0);
+  }, []);
+
+  return positionStyle;
+};
+
 export const TaskbarIcon: FC<UIWindowProps & OrderProps & Actions> = memo(
   ({ order, dragStart, dragEnd, drag: d, uiWindow }) => {
     const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
@@ -102,29 +133,18 @@ export const TaskbarIcon: FC<UIWindowProps & OrderProps & Actions> = memo(
     };
 
     const dragInfoProps = {
-      isDragInTaskbar: !!drag && drag.y < 2 * iconMargin + iconSideLength,
-      isDragging: !!offsets
+      isDragging: !!drag,
+      isDragInTaskbar: !!drag && drag.y < 2 * iconMargin + iconSideLength
     };
 
-    const [animateInTimeout, setA] = useState(true);
-
-    let positionStyle =
-      animateInTimeout && uiWindow.animateInFrom
-        ? {
-            transform: `translateX(${uiWindow.animateInFrom.x}px) translateY(10px)`,
-            transition: '0.2s ease-in-out'
-          }
-        : getTaskbarPositionStyle(
-            order,
-            drag,
-            offsets,
-            iconMargin,
-            iconSideLength
-          );
-
-    useEffect(() => {
-      setTimeout(() => setA(false), 0);
-    }, []);
+    const positionStyle = useTaskbarPositionStyle(
+      order,
+      drag,
+      offsets,
+      uiWindow.animateInFrom,
+      iconMargin,
+      iconSideLength
+    );
 
     return (
       <DraggableCore onStart={onStart} onDrag={onDrag} onStop={onStop}>
