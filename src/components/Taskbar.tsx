@@ -12,6 +12,7 @@ const StyledTaskbar = styled.div`
     p.theme.taskbarIcon.iconSideLength + p.theme.taskbarIcon.iconMargin * 2}px;
   width: 100vw;
   background: ${p => p.theme.color.taskbarBackground};
+  box-shadow: ${p => p.theme.elevation.low};
 `;
 
 export const Taskbar: FC = () => {

@@ -17,5 +17,9 @@ export const Primary: Theme = {
     headerOpacity: 1,
     borderRadius: '10px',
     headerHeight: '2rem'
+  },
+  elevation: {
+    high: '0px 0px 15px 5px rgba(0, 0, 0, 0.3)',
+    low: '0px 0px 10px 0px rgba(0, 0, 0, 0.4)'
   }
 };

@@ -15,6 +15,12 @@ const StyledWindowContainer = styled.div<DragInfoProps & UIWindowProps>`
     p.isDragInTaskbar
       ? p.theme.taskbarIcon.borderRadius
       : p.theme.desktopWindow.borderRadius};
+  box-shadow: ${p =>
+    p.isDragging
+      ? p.isDragInTaskbar
+        ? ''
+        : p.theme.elevation.high
+      : p.theme.elevation.low};
   display: flex;
   flex-direction: column;
   transition: all 0.3s;

@@ -16,4 +16,8 @@ export default interface Theme {
     bodyOpacity: number;
     borderRadius: string;
   };
+  elevation: {
+    high: string;
+    low: string;
+  };
 }
