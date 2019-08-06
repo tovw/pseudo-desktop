@@ -5,6 +5,7 @@ export const Primary: Theme = {
     desktopBackground: 'hotpink',
     taskbarBackground: 'salmon'
   },
+  resizePreview: { opacity: 0.5 },
   taskbarIcon: {
     iconSideLength: 80,
     iconMargin: 10,

@@ -3,6 +3,8 @@ import styled from '../theme';
 import { DesktopWindow } from './DesktopWindow';
 import { Taskbar } from './Taskbar';
 import { useDesktopState, useDesktopActions } from '../state/desktopContext';
+import { useDimensions } from '../utils/useDimensions';
+import { ResizePreview } from './ResizePreview';
 
 const StyledDesktop = styled.div`
   height: 100vh;
@@ -12,15 +14,17 @@ const StyledDesktop = styled.div`
 `;
 
 export const Desktop: FC = () => {
-  const { uiWindows, desktopZindexes } = useDesktopState();
-  const actions = useDesktopActions();
+  const { uiWindows, desktopZindexes, showResizePreview } = useDesktopState();
+  const { setDesktopDimensions } = useDesktopActions();
+  const { ref } = useDimensions(setDesktopDimensions);
 
   return (
-    <StyledDesktop>
+    <StyledDesktop ref={ref}>
       <Taskbar />
       {desktopZindexes.map(id => (
-        <DesktopWindow key={id} uiWindow={uiWindows[id]} {...actions} />
+        <DesktopWindow key={id} uiWindow={uiWindows[id]} />
       ))}
+      <ResizePreview showResizePreview={showResizePreview} />
     </StyledDesktop>
   );
 };

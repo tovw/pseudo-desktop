@@ -7,6 +7,7 @@ import React, {
   useMemo
 } from 'react';
 import { Coordinate, Dimensions, Maybe, UIWindow } from '../utils/types';
+import { dragIsInPreviewTriggerArea } from '../utils/dragIsInTriggerArea';
 
 export interface DesktopState {
   uiWindows: Record<string, UIWindow>;
@@ -16,15 +17,25 @@ export interface DesktopState {
   desktopDimensions: Dimensions;
   taskbarIconSideLength: number;
   taskbarIconMargin: number;
+  showResizePreview: Maybe<{
+    dimensions: Dimensions;
+    triggeredFrom: Coordinate;
+    toCoordinate: Coordinate;
+  }>;
+  resizePreviewCornerTriggerArea: number;
+  resizePreviewSideTriggerArea: number;
 }
 
 const initialState: DesktopState = {
+  resizePreviewCornerTriggerArea: 50,
+  resizePreviewSideTriggerArea: 25,
   desktopZindexes: ['1', '2'],
   taskBarIconOrder: ['3', '4'],
   desktopDimensions: {
     height: 0,
     width: 0
   },
+  showResizePreview: undefined,
   taskbarIconSideLength: 80,
   taskbarIconMargin: 10,
   draggingWindowId: undefined,
@@ -61,9 +72,10 @@ const initialState: DesktopState = {
 };
 
 export enum ActionTypes {
-  DRAG_START = 'DRAG_START',
-  DRAG = 'DRAG',
-  DRAG_END = 'DRAG_END'
+  DRAG_START,
+  DRAG,
+  DRAG_END,
+  SET_DESKTOP_DIMENSIONS
 }
 
 export type Action =
@@ -72,6 +84,10 @@ export type Action =
   | {
       type: ActionTypes.DRAG_END;
       payload: { coordinate: Coordinate; offsets: Coordinate };
+    }
+  | {
+      type: ActionTypes.SET_DESKTOP_DIMENSIONS;
+      payload: { dimensions: Dimensions };
     };
 
 const assertNever = (x: never): never => {
@@ -239,6 +255,13 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
     case ActionTypes.DRAG:
       return {
         ...state,
+        showResizePreview: dragIsInPreviewTriggerArea(
+          action.payload.coordinate,
+          state.desktopDimensions,
+          state.taskbarIconSideLength + state.taskbarIconMargin * 2,
+          state.resizePreviewCornerTriggerArea,
+          state.resizePreviewSideTriggerArea
+        ),
         taskBarIconOrder: adjustTaskbarIconOrder(
           state,
           action.payload.coordinate
@@ -249,6 +272,12 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
         ...state,
         ...dragEnd(state, action.payload.coordinate, action.payload.offsets),
         draggingWindowId: undefined
+      };
+
+    case ActionTypes.SET_DESKTOP_DIMENSIONS:
+      return {
+        ...state,
+        desktopDimensions: action.payload.dimensions
       };
     default:
       return assertNever(action);
@@ -262,22 +291,29 @@ export interface Actions {
   dragStart: (id: string) => void;
   drag: (coordinate: Coordinate) => void;
   dragEnd: (coordinate: Coordinate, offsets: Coordinate) => void;
+  setDesktopDimensions: (dimensions: Dimensions) => void;
 }
 
 export const DesktopStateProvider: FC = ({ children }) => {
   const [state, dispatch] = useReducer(desktopReducer, initialState);
   const actions = useMemo<Actions>(
     () => ({
-      dragStart: (id: string) =>
+      dragStart: id =>
         dispatch({ type: ActionTypes.DRAG_START, payload: { id } }),
 
-      drag: (coordinate: Coordinate) =>
+      drag: coordinate =>
         dispatch({ type: ActionTypes.DRAG, payload: { coordinate } }),
 
-      dragEnd: (coordinate: Coordinate, offsets: Coordinate) =>
+      dragEnd: (coordinate, offsets) =>
         dispatch({
           type: ActionTypes.DRAG_END,
           payload: { coordinate, offsets }
+        }),
+
+      setDesktopDimensions: dimensions =>
+        dispatch({
+          type: ActionTypes.SET_DESKTOP_DIMENSIONS,
+          payload: { dimensions }
         })
     }),
     [dispatch]

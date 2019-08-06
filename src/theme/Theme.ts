@@ -3,6 +3,9 @@ export default interface Theme {
     desktopBackground: string;
     taskbarBackground: string;
   };
+  resizePreview: {
+    opacity: number;
+  };
   taskbarIcon: {
     iconSideLength: number;
     iconMargin: number;

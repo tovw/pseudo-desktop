@@ -1,6 +1,6 @@
 import React, { FC, useState, memo, useContext } from 'react';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
-import { Actions } from '../state/desktopContext';
+import { useDesktopActions } from '../state/desktopContext';
 import styled, { Theme } from '../theme';
 import { Coordinate, Maybe, UIWindow } from '../utils/types';
 import { DragContainer } from './DragContainer';
@@ -29,6 +29,7 @@ const StyledWindowContainer = styled.div<DragInfoProps & UIWindowProps>`
     background: ${p => p.uiWindow.color};
     flex: auto;
   }
+
   > :first-child {
     max-height: ${p =>
       p.isDragInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
@@ -36,6 +37,7 @@ const StyledWindowContainer = styled.div<DragInfoProps & UIWindowProps>`
     transition: max-height 0.2s;
     opacity: ${p => p.theme.desktopWindow.headerOpacity};
   }
+
   > :last-child {
     opacity: ${p => p.theme.desktopWindow.bodyOpacity};
   }
@@ -80,19 +82,15 @@ const getDesktopPositionStyle = (
   return { transform, paddingLeft, zIndex };
 };
 
-export const DesktopWindow: FC<UIWindowProps & Actions> = memo(
-  ({
-    uiWindow,
-    uiWindow: { topLeftPosition, id },
-    drag,
-    dragStart,
-    dragEnd
-  }) => {
+export const DesktopWindow: FC<UIWindowProps> = memo(
+  ({ uiWindow, uiWindow: { topLeftPosition, id } }) => {
     const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
     const [dragCoordinate, setDrag] = useState<Maybe<Coordinate>>();
     const {
       taskbarIcon: { iconSideLength, iconMargin }
     } = useContext<Theme>(ThemeContext);
+
+    const { drag, dragStart, dragEnd } = useDesktopActions();
 
     const onStart: DraggableEventHandler = (_, { x, y }) => {
       setOffsets({ x: x - topLeftPosition.x, y: y - topLeftPosition.y });
