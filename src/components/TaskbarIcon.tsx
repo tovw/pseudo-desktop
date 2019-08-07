@@ -24,7 +24,7 @@ const StyledTaskbarIcon = styled.div<UIWindowProps & DragInfoProps>`
       : p.uiWindow.dimensions.width}px;
 
   box-shadow: ${p =>
-    p.isDragging && !p.isDragInTaskbar ? p.theme.elevation.high : ''};
+    p.isDragging && !p.isDragInTaskbar && p.theme.elevation.high};
 
   overflow: hidden;
   position: absolute;

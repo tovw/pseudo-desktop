@@ -13,7 +13,7 @@ export interface DesktopState {
   uiWindows: Record<string, UIWindow>;
   desktopZindexes: string[];
   taskBarIconOrder: string[];
-  draggingWindowId: Maybe<string>;
+  activeWindowId: Maybe<string>;
   desktopDimensions: Dimensions;
   taskbarIconSideLength: number;
   taskbarIconMargin: number;
@@ -24,11 +24,13 @@ export interface DesktopState {
   }>;
   resizePreviewCornerTriggerArea: number;
   resizePreviewSideTriggerArea: number;
+  desktopWindowMinSize: number;
 }
 
 const initialState: DesktopState = {
   resizePreviewCornerTriggerArea: 50,
   resizePreviewSideTriggerArea: 25,
+  desktopWindowMinSize: 100,
   desktopZindexes: ['1', '2'],
   taskBarIconOrder: ['3', '4'],
   desktopDimensions: {
@@ -38,7 +40,7 @@ const initialState: DesktopState = {
   showResizePreview: undefined,
   taskbarIconSideLength: 80,
   taskbarIconMargin: 10,
-  draggingWindowId: undefined,
+  activeWindowId: undefined,
   uiWindows: {
     '1': {
       id: '1',
@@ -75,7 +77,10 @@ export enum ActionTypes {
   DRAG_START,
   DRAG,
   DRAG_END,
-  SET_DESKTOP_DIMENSIONS
+  SET_DESKTOP_DIMENSIONS,
+  RESIZE_START,
+  RESIZE,
+  RESIZE_END
 }
 
 export type Action =
@@ -88,6 +93,12 @@ export type Action =
   | {
       type: ActionTypes.SET_DESKTOP_DIMENSIONS;
       payload: { dimensions: Dimensions };
+    }
+  | { type: ActionTypes.RESIZE_START; payload: { id: string } }
+  | { type: ActionTypes.RESIZE; payload: { coordinate: Coordinate } }
+  | {
+      type: ActionTypes.RESIZE_END;
+      payload: {};
     };
 
 const assertNever = (x: never): never => {
@@ -133,7 +144,7 @@ const adjustTaskbarIconOrder = (state: DesktopState, drag: Coordinate) => {
     taskbarIconSideLength: l,
     taskbarIconMargin: m,
     taskBarIconOrder,
-    draggingWindowId
+    activeWindowId: draggingWindowId
   } = state;
   const token = taskBarIconOrder.some(id => id === draggingWindowId)
     ? draggingWindowId
@@ -183,14 +194,14 @@ const dragEnd = (
   drag: Coordinate,
   offsets: Coordinate
 ) => {
-  if (!state.draggingWindowId) return state;
+  if (!state.activeWindowId) return state;
   //from bar to desktop
   const {
     taskBarIconOrder,
     taskbarIconMargin: m,
     taskbarIconSideLength: l,
     desktopZindexes,
-    draggingWindowId
+    activeWindowId: draggingWindowId
   } = state;
   const originDesktop = dragOriginIsDesktop(desktopZindexes, draggingWindowId);
   const releaseInTaskbar = dragIsInTaskBar(l, m, drag.y);
@@ -256,7 +267,7 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
     case ActionTypes.DRAG_START:
       return {
         ...state,
-        draggingWindowId: action.payload.id,
+        activeWindowId: action.payload.id,
         desktopZindexes: moveItemToLast(
           state.desktopZindexes,
           action.payload.id
@@ -268,6 +279,7 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
           ? [...state.taskBarIconOrder, TASKBAR_POSITION_PLACEHOLDER]
           : state.taskBarIconOrder
       };
+
     case ActionTypes.DRAG:
       return {
         ...state,
@@ -283,11 +295,12 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
           action.payload.coordinate
         )
       };
+
     case ActionTypes.DRAG_END:
       return {
         ...state,
         ...dragEnd(state, action.payload.coordinate, action.payload.offsets),
-        draggingWindowId: undefined,
+        activeWindowId: undefined,
         showResizePreview: undefined
       };
 
@@ -296,6 +309,49 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
         ...state,
         desktopDimensions: action.payload.dimensions
       };
+
+    case ActionTypes.RESIZE_START:
+      return {
+        ...state,
+        activeWindowId: action.payload.id,
+        desktopZindexes: moveItemToLast(
+          state.desktopZindexes,
+          action.payload.id
+        )
+      };
+
+    case ActionTypes.RESIZE:
+      // console.log(action.payload.coordinate);
+      // console.log(state.uiWindows[state.activeWindowId].dimensions.height);
+      // console.log(
+      //   state.uiWindows[state.activeWindowId].dimensions.height +
+      //     action.payload.coordinate.y
+      // );
+      return {
+        ...state,
+        uiWindows: {
+          ...state.uiWindows,
+          [state.activeWindowId]: {
+            ...state.uiWindows[state.activeWindowId],
+            dimensions: {
+              width: Math.max(
+                state.uiWindows[state.activeWindowId].dimensions.width +
+                  action.payload.coordinate.x,
+                state.desktopWindowMinSize
+              ),
+              height: Math.max(
+                state.uiWindows[state.activeWindowId].dimensions.height +
+                  action.payload.coordinate.y,
+                state.desktopWindowMinSize
+              )
+            }
+          }
+        }
+      };
+
+    case ActionTypes.RESIZE_END:
+      return { ...state, activeWindowId: undefined };
+
     default:
       return assertNever(action);
   }
@@ -309,6 +365,9 @@ export interface Actions {
   drag: (coordinate: Coordinate) => void;
   dragEnd: (coordinate: Coordinate, offsets: Coordinate) => void;
   setDesktopDimensions: (dimensions: Dimensions) => void;
+  resizeStart: (id: string) => void;
+  resize: (coordinate: Coordinate) => void;
+  resizeEnd: () => void;
 }
 
 export const DesktopStateProvider: FC = ({ children }) => {
@@ -331,6 +390,18 @@ export const DesktopStateProvider: FC = ({ children }) => {
         dispatch({
           type: ActionTypes.SET_DESKTOP_DIMENSIONS,
           payload: { dimensions }
+        }),
+
+      resizeStart: id =>
+        dispatch({ type: ActionTypes.RESIZE_START, payload: { id } }),
+
+      resize: coordinate =>
+        dispatch({ type: ActionTypes.RESIZE, payload: { coordinate } }),
+
+      resizeEnd: () =>
+        dispatch({
+          type: ActionTypes.RESIZE_END,
+          payload: {}
         })
     }),
     [dispatch]

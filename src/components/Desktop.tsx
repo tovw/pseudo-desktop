@@ -18,7 +18,7 @@ export const Desktop: FC = () => {
     uiWindows,
     desktopZindexes,
     showResizePreview,
-    draggingWindowId
+    activeWindowId
   } = useDesktopState();
   const { setDesktopDimensions } = useDesktopActions();
   const { ref } = useDimensions(setDesktopDimensions);
@@ -30,7 +30,7 @@ export const Desktop: FC = () => {
         <DesktopWindow
           key={id}
           uiWindow={uiWindows[id]}
-          isSiblingActive={!!draggingWindowId && draggingWindowId !== id}
+          isSiblingActive={!!activeWindowId && activeWindowId !== id}
         />
       ))}
       <ResizePreview showResizePreview={showResizePreview} />
