@@ -6,7 +6,9 @@ import { Coordinate, Maybe, UIWindow } from '../utils/types';
 import { DragContainer } from './DragContainer';
 import { ThemeContext } from 'styled-components';
 
-const StyledWindowContainer = styled.div<DragInfoProps & UIWindowProps>`
+const StyledWindowContainer = styled.div<
+  DragInfoProps & UIWindowProps & SiblingActiveProps
+>`
   width: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.dimensions.width)}px;
   height: ${p => (p.isDragInTaskbar ? 80 : p.uiWindow.dimensions.height)}px;
   overflow: hidden;
@@ -25,6 +27,8 @@ const StyledWindowContainer = styled.div<DragInfoProps & UIWindowProps>`
   flex-direction: column;
   transition: all 0.3s;
 
+  filter: ${p => p.isSiblingActive && 'blur(2px)'};
+
   > * {
     background: ${p => p.uiWindow.color};
     flex: auto;
@@ -35,11 +39,17 @@ const StyledWindowContainer = styled.div<DragInfoProps & UIWindowProps>`
       p.isDragInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
 
     transition: max-height 0.2s;
-    opacity: ${p => p.theme.desktopWindow.headerOpacity};
+    opacity: ${p =>
+      p.theme.desktopWindow.headerOpacity -
+      (p.isSiblingActive ? 0.2 : 0) +
+      (p.isDragging ? 0.1 : 0)};
   }
 
   > :last-child {
-    opacity: ${p => p.theme.desktopWindow.bodyOpacity};
+    opacity: ${p =>
+      p.theme.desktopWindow.bodyOpacity -
+      (p.isSiblingActive ? 0.2 : 0) +
+      (p.isDragging ? 0.1 : 0)};
   }
 `;
 
@@ -54,6 +64,10 @@ export interface DragInfoProps {
 
 export interface OrderProps {
   order: number;
+}
+
+export interface SiblingActiveProps {
+  isSiblingActive: boolean;
 }
 
 const getDesktopPositionStyle = (
@@ -82,8 +96,8 @@ const getDesktopPositionStyle = (
   return { transform, paddingLeft, zIndex };
 };
 
-export const DesktopWindow: FC<UIWindowProps> = memo(
-  ({ uiWindow, uiWindow: { topLeftPosition, id } }) => {
+export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
+  ({ uiWindow, uiWindow: { topLeftPosition, id }, isSiblingActive }) => {
     const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
     const [dragCoordinate, setDrag] = useState<Maybe<Coordinate>>();
     const {
@@ -129,7 +143,11 @@ export const DesktopWindow: FC<UIWindowProps> = memo(
             iconSideLength
           )}
         >
-          <StyledWindowContainer {...dragInfoProps} uiWindow={uiWindow}>
+          <StyledWindowContainer
+            {...dragInfoProps}
+            uiWindow={uiWindow}
+            isSiblingActive={isSiblingActive}
+          >
             <div className="header"></div>
             <div></div>
           </StyledWindowContainer>

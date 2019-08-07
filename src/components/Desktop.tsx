@@ -14,7 +14,12 @@ const StyledDesktop = styled.div`
 `;
 
 export const Desktop: FC = () => {
-  const { uiWindows, desktopZindexes, showResizePreview } = useDesktopState();
+  const {
+    uiWindows,
+    desktopZindexes,
+    showResizePreview,
+    draggingWindowId
+  } = useDesktopState();
   const { setDesktopDimensions } = useDesktopActions();
   const { ref } = useDimensions(setDesktopDimensions);
 
@@ -22,7 +27,11 @@ export const Desktop: FC = () => {
     <StyledDesktop ref={ref}>
       <Taskbar />
       {desktopZindexes.map(id => (
-        <DesktopWindow key={id} uiWindow={uiWindows[id]} />
+        <DesktopWindow
+          key={id}
+          uiWindow={uiWindows[id]}
+          isSiblingActive={!!draggingWindowId && draggingWindowId !== id}
+        />
       ))}
       <ResizePreview showResizePreview={showResizePreview} />
     </StyledDesktop>
