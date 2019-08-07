@@ -80,7 +80,8 @@ export enum ActionTypes {
   SET_DESKTOP_DIMENSIONS,
   RESIZE_START,
   RESIZE,
-  RESIZE_END
+  RESIZE_END,
+  BRING_TO_FRONT
 }
 
 export type Action =
@@ -99,7 +100,8 @@ export type Action =
   | {
       type: ActionTypes.RESIZE_END;
       payload: {};
-    };
+    }
+  | { type: ActionTypes.BRING_TO_FRONT; payload: { id: string } };
 
 const assertNever = (x: never): never => {
   throw new Error('Invalid Action: ' + x);
@@ -352,6 +354,15 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
     case ActionTypes.RESIZE_END:
       return { ...state, activeWindowId: undefined };
 
+    case ActionTypes.BRING_TO_FRONT:
+      return {
+        ...state,
+        desktopZindexes: moveItemToLast(
+          state.desktopZindexes,
+          action.payload.id
+        )
+      };
+
     default:
       return assertNever(action);
   }
@@ -368,6 +379,7 @@ export interface Actions {
   resizeStart: (id: string) => void;
   resize: (coordinate: Coordinate) => void;
   resizeEnd: () => void;
+  bringToFront: (id: string) => void;
 }
 
 export const DesktopStateProvider: FC = ({ children }) => {
@@ -402,6 +414,12 @@ export const DesktopStateProvider: FC = ({ children }) => {
         dispatch({
           type: ActionTypes.RESIZE_END,
           payload: {}
+        }),
+
+      bringToFront: id =>
+        dispatch({
+          type: ActionTypes.BRING_TO_FRONT,
+          payload: { id }
         })
     }),
     [dispatch]

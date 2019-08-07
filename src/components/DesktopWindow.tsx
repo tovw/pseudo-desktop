@@ -2,7 +2,7 @@ import React, { FC, useState, memo, useContext } from 'react';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { useDesktopActions } from '../state/desktopContext';
 import styled, { Theme } from '../theme';
-import { Coordinate, Maybe, UIWindow, Dimensions } from '../utils/types';
+import { Coordinate, Maybe, UIWindow } from '../utils/types';
 import { DragContainer } from './DragContainer';
 import { ThemeContext } from 'styled-components';
 
@@ -27,12 +27,14 @@ const StyledWindowContainer = styled.div<
     p.isDragInTaskbar
       ? p.theme.taskbarIcon.borderRadius
       : p.theme.desktopWindow.borderRadius};
+
   box-shadow: ${p =>
     p.isDragging
       ? p.isDragInTaskbar
         ? ''
         : p.theme.elevation.high
       : p.theme.elevation.low};
+
   display: flex;
   position: relative;
   flex-direction: column;
@@ -138,7 +140,8 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
       dragEnd,
       resizeStart,
       resize,
-      resizeEnd
+      resizeEnd,
+      bringToFront
     } = useDesktopActions();
 
     const onStart: DraggableEventHandler = (_, { x, y }) => {
@@ -168,6 +171,8 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
 
     const onResize: DraggableEventHandler = (_, { deltaX: x, deltaY: y }) =>
       resize({ x, y });
+
+    const onClick = () => bringToFront(id);
 
     const dragInfoProps = {
       isDragInTaskbar: !!dragCoordinate && dragCoordinate.y < 100,
@@ -205,7 +210,7 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
             >
               <StyledResizer />
             </DraggableCore>
-            <div></div>
+            <div onClick={onClick} onTouchStart={onClick}></div>
           </StyledWindowContainer>
         </DragContainer>
       </DraggableCore>
