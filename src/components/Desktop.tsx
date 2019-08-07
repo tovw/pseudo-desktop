@@ -11,6 +11,7 @@ const StyledDesktop = styled.div`
   width: 100vw;
   overflow: hidden;
   background: ${p => p.theme.color.desktopBackground};
+  position: relative;
 `;
 
 export const Desktop: FC = () => {

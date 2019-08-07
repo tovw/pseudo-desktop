@@ -145,6 +145,7 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
     } = useDesktopActions();
 
     const onStart: DraggableEventHandler = (_, { x, y }) => {
+      console.log('hep');
       setOffsets({ x: x - topLeftPosition.x, y: y - topLeftPosition.y });
       dragStart(id);
     };
@@ -172,7 +173,11 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
     const onResize: DraggableEventHandler = (_, { deltaX: x, deltaY: y }) =>
       resize({ x, y });
 
-    const onClick = () => bringToFront(id);
+    const onClick = (e: React.MouseEvent | React.TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      bringToFront(id);
+    };
 
     const dragInfoProps = {
       isDragInTaskbar: !!dragCoordinate && dragCoordinate.y < 100,
