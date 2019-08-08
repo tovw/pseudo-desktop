@@ -1,10 +1,10 @@
-import React, { FC, useContext, useState, useEffect, memo } from 'react';
+import React, { FC, memo, useContext, useEffect, useState } from 'react';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { ThemeContext } from 'styled-components';
 import { useDesktopActions } from '../state/desktopContext';
 import styled, { Theme } from '../theme';
 import { Coordinate } from '../utils/types';
-import { DragInfoProps, UIWindowProps, OrderProps } from './DesktopWindow';
+import { DragInfoProps, OrderProps, UIWindowProps } from './DesktopWindow';
 import { DragContainer } from './DragContainer';
 
 const StyledTaskbarIcon = styled.div.attrs<UIWindowProps & DragInfoProps>(
@@ -34,7 +34,7 @@ const StyledTaskbarIcon = styled.div.attrs<UIWindowProps & DragInfoProps>(
   display: flex;
   flex-direction: column;
 
-  transition: all 0.2 ease-in-out;
+  transition: all 0.3s ease-in-out;
 
   > * {
     background: ${p => p.uiWindow.color};
@@ -44,7 +44,7 @@ const StyledTaskbarIcon = styled.div.attrs<UIWindowProps & DragInfoProps>(
   > :first-child {
     max-height: ${p =>
       p.noDragOrInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
-    transition: max-height 0.2s;
+    transition: max-height 0.3s;
   }
   > :last-child {
     opacity: ${p =>
