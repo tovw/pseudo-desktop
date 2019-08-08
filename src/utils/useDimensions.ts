@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState, useCallback } from 'react';
-import { Dimensions, Maybe } from './types';
+import { Dimensions } from './types';
 
 const getDimensions = (node: HTMLElement) => {
   const { width, height } = node.getBoundingClientRect();
@@ -7,8 +7,8 @@ const getDimensions = (node: HTMLElement) => {
 };
 
 export const useDimensions = (callback?: (dimensions: Dimensions) => void) => {
-  const [dimensions, setDimensions] = useState<Maybe<Dimensions>>(null);
-  const [node, setNode] = useState<Maybe<HTMLElement>>();
+  const [dimensions, setDimensions] = useState<Dimensions | undefined>();
+  const [node, setNode] = useState<HTMLElement | null>(null);
   const ref = useCallback(setNode, []);
 
   useLayoutEffect(() => {

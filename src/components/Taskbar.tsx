@@ -3,13 +3,12 @@ import styled from '../theme';
 import { TaskbarIcon } from './TaskbarIcon';
 import {
   useDesktopState,
-  useDesktopActions,
   TASKBAR_POSITION_PLACEHOLDER
 } from '../state/desktopContext';
 
 const StyledTaskbar = styled.div`
-  height: ${p =>
-    p.theme.taskbarIcon.iconSideLength + p.theme.taskbarIcon.iconMargin * 2}px;
+  height: ${({ theme }) =>
+    theme.taskbarIcon.iconSideLength + theme.taskbarIcon.iconMargin * 2}px;
   width: 100vw;
   background: ${p => p.theme.color.taskbarBackground};
   box-shadow: ${p => p.theme.elevation.low};
@@ -17,19 +16,13 @@ const StyledTaskbar = styled.div`
 
 export const Taskbar: FC = () => {
   const { taskBarIconOrder, uiWindows } = useDesktopState();
-  const actions = useDesktopActions();
 
   return (
     <StyledTaskbar>
       {taskBarIconOrder.map(
-        (id, o) =>
+        (id, order) =>
           id !== TASKBAR_POSITION_PLACEHOLDER && (
-            <TaskbarIcon
-              key={id}
-              order={o}
-              uiWindow={uiWindows[id]}
-              {...actions}
-            />
+            <TaskbarIcon key={id} order={order} uiWindow={uiWindows[id]} />
           )
       )}
     </StyledTaskbar>

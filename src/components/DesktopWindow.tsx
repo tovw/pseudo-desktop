@@ -2,7 +2,7 @@ import React, { FC, useState, memo, useContext } from 'react';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { useDesktopActions } from '../state/desktopContext';
 import styled, { Theme } from '../theme';
-import { Coordinate, Maybe, UIWindow } from '../utils/types';
+import { Coordinate, UIWindow } from '../utils/types';
 import { DragContainer } from './DragContainer';
 import { ThemeContext } from 'styled-components';
 
@@ -97,10 +97,10 @@ export interface SiblingActiveProps {
 
 const getDesktopPositionStyle = (
   windowPosition: Coordinate,
-  drag: Maybe<Coordinate>,
-  offsets: Maybe<Coordinate>,
   taskbarIconMargin: number,
-  taskbarIconSideLength: number
+  taskbarIconSideLength: number,
+  drag?: Coordinate,
+  offsets?: Coordinate
 ) => {
   const dragInTaskbar =
     drag && drag.y < 2 * taskbarIconMargin + taskbarIconSideLength;
@@ -127,8 +127,8 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
     uiWindow: { topLeftPosition, id, dimensions },
     isSiblingActive
   }) => {
-    const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
-    const [dragCoordinate, setDrag] = useState<Maybe<Coordinate>>();
+    const [offsets, setOffsets] = useState<Coordinate | undefined>();
+    const [dragCoordinate, setDrag] = useState<Coordinate | undefined>();
     const {
       taskbarIcon: { iconSideLength, iconMargin }
     } = useContext<Theme>(ThemeContext);
@@ -145,7 +145,6 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
     } = useDesktopActions();
 
     const onStart: DraggableEventHandler = (_, { x, y }) => {
-      console.log('hep');
       setOffsets({ x: x - topLeftPosition.x, y: y - topLeftPosition.y });
       dragStart(id);
     };
@@ -194,10 +193,10 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
         <DragContainer
           style={getDesktopPositionStyle(
             topLeftPosition,
-            dragCoordinate,
-            offsets,
             iconMargin,
-            iconSideLength
+            iconSideLength,
+            dragCoordinate,
+            offsets
           )}
         >
           <StyledWindowContainer

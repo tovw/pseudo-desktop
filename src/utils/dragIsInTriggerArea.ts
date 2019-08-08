@@ -1,4 +1,4 @@
-import { Coordinate, Dimensions, Maybe } from './types';
+import { Coordinate, Dimensions } from './types';
 
 export const dragIsInPreviewTriggerArea = (
   triggeredFrom: Coordinate,
@@ -6,13 +6,16 @@ export const dragIsInPreviewTriggerArea = (
   taskbarBottomEdge: number,
   cornerTriggerAreaSide: number,
   sideTriggerAreaSide: number
-): Maybe<{
-  dimensions: Dimensions;
-  triggeredFrom: Coordinate;
-  toCoordinate: Coordinate;
-}> => {
+):
+  | {
+      dimensions: Dimensions;
+      triggeredFrom: Coordinate;
+      toCoordinate: Coordinate;
+    }
+  | undefined => {
   const { x, y } = triggeredFrom;
   const { width: w, height: h } = dimensions;
+
   const leftCorner = x < cornerTriggerAreaSide;
   const rightCorner = x > w - cornerTriggerAreaSide;
   const topCorner = y < taskbarBottomEdge + cornerTriggerAreaSide;

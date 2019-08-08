@@ -7,21 +7,21 @@ import React, {
   useReducer
 } from 'react';
 import { dragIsInPreviewTriggerArea } from '../utils/dragIsInTriggerArea';
-import { Coordinate, Dimensions, Maybe, UIWindow } from '../utils/types';
+import { Coordinate, Dimensions, UIWindow } from '../utils/types';
 
 export interface DesktopState {
   uiWindows: Record<string, UIWindow>;
   desktopZindexes: string[];
   taskBarIconOrder: string[];
-  activeWindowId: Maybe<string>;
+  activeWindowId?: string;
   desktopDimensions: Dimensions;
   taskbarIconSideLength: number;
   taskbarIconMargin: number;
-  showResizePreview: Maybe<{
+  showResizePreview?: {
     dimensions: Dimensions;
     triggeredFrom: Coordinate;
     toCoordinate: Coordinate;
-  }>;
+  };
   resizePreviewCornerTriggerArea: number;
   resizePreviewSideTriggerArea: number;
   desktopWindowMinSize: number;
@@ -46,28 +46,28 @@ const initialState: DesktopState = {
       id: '1',
       topLeftPosition: { x: 100, y: 200 },
       dimensions: { width: 300, height: 300 },
-      color: 'papayawhip',
+      color: '#A5DD97',
       animateInFrom: undefined
     },
     '2': {
       id: '2',
       topLeftPosition: { y: 311, x: 231 },
       dimensions: { width: 123, height: 234 },
-      color: 'blue',
+      color: '#95A9F2',
       animateInFrom: undefined
     },
     '3': {
       id: '3',
       topLeftPosition: { y: 111, x: 231 },
       dimensions: { width: 123, height: 234 },
-      color: 'green',
+      color: '#F093AE',
       animateInFrom: undefined
     },
     '4': {
       id: '4',
       topLeftPosition: { y: 221, x: 291 },
       dimensions: { width: 90, height: 400 },
-      color: 'purple',
+      color: '#F0C996',
       animateInFrom: undefined
     }
   }
@@ -116,7 +116,7 @@ const moveItemToLast = <T extends {}>(array: T[], item: T) => {
 
 const dragOriginIsDesktop = (
   desktopZindexes: string[],
-  draggingWindowId: Maybe<string>
+  draggingWindowId?: string
 ) => desktopZindexes.some(idx => idx === draggingWindowId);
 
 const dragIsInTaskBar = (
@@ -170,11 +170,11 @@ const updateWindowPosition = (
   uiWindow: UIWindow,
   coordinate: Coordinate,
   offsets: Coordinate,
-  dragPreview: Maybe<{
+  dragPreview?: {
     dimensions: Dimensions;
     triggeredFrom: Coordinate;
     toCoordinate: Coordinate;
-  }>
+  }
 ) => {
   return dragPreview
     ? {
@@ -264,9 +264,41 @@ const dragEnd = (
   };
 };
 
+const resizeWindow = (state: DesktopState, deltas: Coordinate) => {
+  const { activeWindowId, uiWindows, desktopWindowMinSize } = state;
+  if (!activeWindowId) return state;
+  const window = uiWindows[activeWindowId];
+  return {
+    ...state,
+    uiWindows: {
+      ...uiWindows,
+      [activeWindowId]: {
+        ...window,
+        dimensions: {
+          width: Math.max(
+            window.dimensions.width + deltas.x,
+            desktopWindowMinSize
+          ),
+          height: Math.max(
+            window.dimensions.height + deltas.y,
+            desktopWindowMinSize
+          )
+        }
+      }
+    }
+  };
+};
+
+const vibrate = (pattern: number | number[]) =>
+  window.navigator.vibrate(pattern);
+
+const dragVibrate = () => vibrate(30);
+const dragEndVibrate = () => vibrate(15);
+
 const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
   switch (action.type) {
     case ActionTypes.DRAG_START:
+      dragVibrate();
       return {
         ...state,
         activeWindowId: action.payload.id,
@@ -299,6 +331,7 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
       };
 
     case ActionTypes.DRAG_END:
+      dragEndVibrate();
       return {
         ...state,
         ...dragEnd(state, action.payload.coordinate, action.payload.offsets),
@@ -313,6 +346,7 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
       };
 
     case ActionTypes.RESIZE_START:
+      dragVibrate();
       return {
         ...state,
         activeWindowId: action.payload.id,
@@ -323,35 +357,10 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
       };
 
     case ActionTypes.RESIZE:
-      // console.log(action.payload.coordinate);
-      // console.log(state.uiWindows[state.activeWindowId].dimensions.height);
-      // console.log(
-      //   state.uiWindows[state.activeWindowId].dimensions.height +
-      //     action.payload.coordinate.y
-      // );
-      return {
-        ...state,
-        uiWindows: {
-          ...state.uiWindows,
-          [state.activeWindowId]: {
-            ...state.uiWindows[state.activeWindowId],
-            dimensions: {
-              width: Math.max(
-                state.uiWindows[state.activeWindowId].dimensions.width +
-                  action.payload.coordinate.x,
-                state.desktopWindowMinSize
-              ),
-              height: Math.max(
-                state.uiWindows[state.activeWindowId].dimensions.height +
-                  action.payload.coordinate.y,
-                state.desktopWindowMinSize
-              )
-            }
-          }
-        }
-      };
+      return resizeWindow(state, action.payload.coordinate);
 
     case ActionTypes.RESIZE_END:
+      dragEndVibrate();
       return { ...state, activeWindowId: undefined };
 
     case ActionTypes.BRING_TO_FRONT:
@@ -369,7 +378,7 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
 };
 
 const DesktopStateContext = createContext<DesktopState>(initialState);
-const DesktopDispatchContext = createContext<Maybe<Actions>>(null);
+const DesktopDispatchContext = createContext<Actions | null>(null);
 
 export interface Actions {
   dragStart: (id: string) => void;

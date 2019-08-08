@@ -1,37 +1,40 @@
 import React, { FC, useContext, useState, useEffect, memo } from 'react';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { ThemeContext } from 'styled-components';
-import { Actions } from '../state/desktopContext';
+import { useDesktopActions } from '../state/desktopContext';
 import styled, { Theme } from '../theme';
-import { Coordinate, Maybe } from '../utils/types';
+import { Coordinate } from '../utils/types';
 import { DragInfoProps, UIWindowProps, OrderProps } from './DesktopWindow';
 import { DragContainer } from './DragContainer';
 
-const StyledTaskbarIcon = styled.div<UIWindowProps & DragInfoProps>`
+const StyledTaskbarIcon = styled.div.attrs<UIWindowProps & DragInfoProps>(
+  p => ({
+    noDragOrInTaskbar: !p.isDragging || p.isDragInTaskbar
+  })
+)<UIWindowProps & DragInfoProps & { noDragOrInTaskbar?: boolean }>`
   border-radius: ${p =>
-    !p.isDragging || p.isDragInTaskbar
+    p.noDragOrInTaskbar
       ? p.theme.taskbarIcon.borderRadius
       : p.theme.desktopWindow.borderRadius};
 
   height: ${p =>
-    !p.isDragging || p.isDragInTaskbar
+    p.noDragOrInTaskbar
       ? p.theme.taskbarIcon.iconSideLength
       : p.uiWindow.dimensions.height}px;
 
   width: ${p =>
-    !p.isDragging || p.isDragInTaskbar
+    p.noDragOrInTaskbar
       ? p.theme.taskbarIcon.iconSideLength
       : p.uiWindow.dimensions.width}px;
 
-  box-shadow: ${p =>
-    p.isDragging && !p.isDragInTaskbar && p.theme.elevation.high};
+  box-shadow: ${p => !p.noDragOrInTaskbar && p.theme.elevation.high};
 
   overflow: hidden;
   position: absolute;
   display: flex;
   flex-direction: column;
 
-  transition: width 0.2s, height 0.2s;
+  transition: all 0.2 ease-in-out;
 
   > * {
     background: ${p => p.uiWindow.color};
@@ -40,14 +43,12 @@ const StyledTaskbarIcon = styled.div<UIWindowProps & DragInfoProps>`
   }
   > :first-child {
     max-height: ${p =>
-      !p.isDragging || p.isDragInTaskbar
-        ? '100%'
-        : p.theme.desktopWindow.headerHeight};
+      p.noDragOrInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
     transition: max-height 0.2s;
   }
   > :last-child {
     opacity: ${p =>
-      p.isDragging || !p.isDragInTaskbar
+      !p.noDragOrInTaskbar
         ? p.theme.desktopWindow.bodyOpacity + 0.1
         : p.theme.taskbarIcon.bottomHalfOpacity};
   }
@@ -55,10 +56,10 @@ const StyledTaskbarIcon = styled.div<UIWindowProps & DragInfoProps>`
 
 const getTaskbarPositionStyle = (
   order: number,
-  drag: Maybe<{ y: number; x: number }>,
-  offsets: Maybe<{ y: number; x: number }>,
   taskbarIconMargin: number,
-  taskbarIconSideLength: number
+  taskbarIconSideLength: number,
+  drag?: Coordinate,
+  offsets?: Coordinate
 ) => {
   const dragInTaskbar =
     drag && drag.y < 2 * taskbarIconMargin + taskbarIconSideLength;
@@ -66,25 +67,25 @@ const getTaskbarPositionStyle = (
   const tx =
     drag && offsets
       ? drag.x - offsets.x
-      : taskbarIconSideLength * order + (1 + order) * taskbarIconMargin;
+      : (taskbarIconSideLength + taskbarIconMargin) * order + taskbarIconMargin;
 
   const ty =
     !drag || dragInTaskbar ? taskbarIconMargin : drag.y - taskbarIconMargin;
 
   const transform = `translateX(${tx}px) translateY(${ty}px)`;
-  const transition = drag ? '' : 'transform 0.2s ease-in-out';
+  const transition = drag ? undefined : 'all 0.2s ease-in-out';
   const zIndex = drag ? 99 : undefined;
 
-  return { transform, transition, zIndex };
+  return { transform, transition, zIndex, width: 80, height: 80 };
 };
 
 const useTaskbarPositionStyle = (
   order: number,
-  drag: Maybe<Coordinate>,
-  offsets: Maybe<Coordinate>,
-  animateIn: Maybe<Coordinate>,
   taskbarIconMargin: number,
-  taskbarIconSideLength: number
+  taskbarIconSideLength: number,
+  drag?: Coordinate,
+  offsets?: Coordinate,
+  animateIn?: Coordinate
 ) => {
   const [isFirstRender, setIsFirstRender] = useState(true);
 
@@ -96,10 +97,10 @@ const useTaskbarPositionStyle = (
         }
       : getTaskbarPositionStyle(
           order,
-          drag,
-          offsets,
           taskbarIconMargin,
-          taskbarIconSideLength
+          taskbarIconSideLength,
+          drag,
+          offsets
         );
 
   useEffect(() => {
@@ -109,13 +110,15 @@ const useTaskbarPositionStyle = (
   return positionStyle;
 };
 
-export const TaskbarIcon: FC<UIWindowProps & OrderProps & Actions> = memo(
-  ({ order, dragStart, dragEnd, drag: d, uiWindow }) => {
-    const [offsets, setOffsets] = useState<Maybe<Coordinate>>();
-    const [drag, setDrag] = useState<Maybe<Coordinate>>();
+export const TaskbarIcon: FC<UIWindowProps & OrderProps> = memo(
+  ({ order, uiWindow }) => {
+    const [offsets, setOffsets] = useState<Coordinate | undefined>();
+    const [drag, setDrag] = useState<Coordinate | undefined>();
     const {
       taskbarIcon: { iconSideLength, iconMargin }
     } = useContext<Theme>(ThemeContext);
+
+    const { dragStart, dragEnd, drag: d } = useDesktopActions();
 
     const onStart: DraggableEventHandler = (_, { x, y }) => {
       setOffsets({
@@ -145,12 +148,16 @@ export const TaskbarIcon: FC<UIWindowProps & OrderProps & Actions> = memo(
 
     const positionStyle = useTaskbarPositionStyle(
       order,
+      iconMargin,
+      iconSideLength,
       drag,
       offsets,
-      uiWindow.animateInFrom,
-      iconMargin,
-      iconSideLength
+      uiWindow.animateInFrom
     );
+
+    if (uiWindow.id === '3') {
+      console.log(positionStyle);
+    }
 
     return (
       <DraggableCore onStart={onStart} onDrag={onDrag} onStop={onStop}>

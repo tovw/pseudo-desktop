@@ -7,7 +7,7 @@ import React, {
   useState
 } from 'react';
 import styled from '../theme';
-import { Coordinate, Dimensions, Maybe } from '../utils/types';
+import { Coordinate, Dimensions } from '../utils/types';
 
 const StyledResizePreview = styled.div`
   position: absolute;
@@ -30,11 +30,11 @@ const getResizePreviewPositionStyles = (
 });
 
 export const ResizePreview: FC<{
-  showResizePreview: Maybe<{
+  showResizePreview?: {
     dimensions: Dimensions;
     triggeredFrom: Coordinate;
     toCoordinate: Coordinate;
-  }>;
+  };
 }> = memo(({ showResizePreview }) => {
   const [isFirstRender, setIsFirstRender] = useState(false);
   const previousOrigin = useRef<Coordinate>({ x: 0, y: 0 });

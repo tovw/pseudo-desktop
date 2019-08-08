@@ -1,11 +1,9 @@
-export type Maybe<T> = T | undefined | null;
-
 export interface UIWindow {
   id: string;
   color: string;
   dimensions: Dimensions;
   topLeftPosition: Coordinate;
-  animateInFrom: Maybe<Coordinate>;
+  animateInFrom?: Coordinate;
 }
 
 export interface Coordinate {
