@@ -4,10 +4,13 @@ import React, {
   FC,
   useContext,
   useMemo,
-  useReducer
+  useReducer,
+  useEffect
 } from 'react';
 import { dragIsInPreviewTriggerArea } from '../utils/dragIsInTriggerArea';
 import { Coordinate, Dimensions, UIWindow } from '../utils/types';
+import { ThemeContext } from 'styled-components';
+import { Theme } from '../theme';
 
 export interface DesktopState {
   uiWindows: Record<string, UIWindow>;
@@ -38,8 +41,8 @@ const initialState: DesktopState = {
     width: 0
   },
   showResizePreview: undefined,
-  taskbarIconSideLength: 80,
-  taskbarIconMargin: 10,
+  taskbarIconSideLength: 0,
+  taskbarIconMargin: 0,
   activeWindowId: undefined,
   uiWindows: {
     '1': {
@@ -81,7 +84,8 @@ export enum ActionTypes {
   RESIZE_START,
   RESIZE,
   RESIZE_END,
-  BRING_TO_FRONT
+  BRING_TO_FRONT,
+  SET_ICON_THEME_VARIABLES
 }
 
 export type Action =
@@ -101,7 +105,14 @@ export type Action =
       type: ActionTypes.RESIZE_END;
       payload: {};
     }
-  | { type: ActionTypes.BRING_TO_FRONT; payload: { id: string } };
+  | { type: ActionTypes.BRING_TO_FRONT; payload: { id: string } }
+  | {
+      type: ActionTypes.SET_ICON_THEME_VARIABLES;
+      payload: {
+        taskbarIconSideLength: number;
+        taskbarIconMargin: number;
+      };
+    };
 
 const assertNever = (x: never): never => {
   throw new Error('Invalid Action: ' + x);
@@ -372,6 +383,9 @@ const desktopReducer = (state: DesktopState, action: Action): DesktopState => {
         )
       };
 
+    case ActionTypes.SET_ICON_THEME_VARIABLES:
+      return { ...state, ...action.payload };
+
     default:
       return assertNever(action);
   }
@@ -432,6 +446,21 @@ export const DesktopStateProvider: FC = ({ children }) => {
         })
     }),
     [dispatch]
+  );
+
+  const {
+    taskbarIcon: { iconSideLength, iconMargin }
+  } = useContext<Theme>(ThemeContext);
+  useEffect(
+    () =>
+      dispatch({
+        type: ActionTypes.SET_ICON_THEME_VARIABLES,
+        payload: {
+          taskbarIconMargin: iconMargin,
+          taskbarIconSideLength: iconSideLength
+        }
+      }),
+    [iconSideLength, iconMargin]
   );
 
   return (

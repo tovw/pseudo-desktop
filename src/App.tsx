@@ -1,17 +1,18 @@
 import React from 'react';
 import { render } from 'react-dom';
-import { GlobalStyle, Primary, ThemeProvider } from './theme';
+import { GlobalStyle } from './theme';
 import { Desktop } from './components/Desktop';
 import { DesktopStateProvider } from './state/desktopContext';
+import { ThemeContext } from './state/ThemeContext';
 
 const App = () => (
   <>
     <GlobalStyle />
-    <ThemeProvider theme={Primary}>
+    <ThemeContext>
       <DesktopStateProvider>
         <Desktop />
       </DesktopStateProvider>
-    </ThemeProvider>
+    </ThemeContext>
   </>
 );
 

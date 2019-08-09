@@ -10,6 +10,7 @@ import {
 import { useDimensions } from '../utils/useDimensions';
 import { ResizePreview } from './ResizePreview';
 import { TaskbarIcon } from './TaskbarIcon';
+import { ThemeSwitch } from './ThemeSwitch';
 
 const StyledDesktop = styled.div`
   height: 100vh;
@@ -17,6 +18,7 @@ const StyledDesktop = styled.div`
   overflow: hidden;
   background: ${p => p.theme.color.desktopBackground};
   position: relative;
+  transition: all 0.3s ease-in-out;
 `;
 
 const StyledTaskbar = styled.div`
@@ -25,6 +27,7 @@ const StyledTaskbar = styled.div`
 
   background: ${p => p.theme.color.taskbarBackground};
   box-shadow: ${p => p.theme.elevation.low};
+  transition: all 0.3s ease-in-out;
 `;
 
 export const Desktop: FC = () => {
@@ -47,6 +50,7 @@ export const Desktop: FC = () => {
               <TaskbarIcon key={id} order={order} uiWindow={uiWindows[id]} />
             )
         )}
+        <ThemeSwitch />
       </StyledTaskbar>
       {desktopZindexes.map(id => (
         <DesktopWindow

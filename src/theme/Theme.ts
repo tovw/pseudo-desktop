@@ -5,6 +5,7 @@ export default interface Theme {
   };
   resizePreview: {
     opacity: number;
+    color: string;
   };
   taskbarIcon: {
     iconSideLength: number;

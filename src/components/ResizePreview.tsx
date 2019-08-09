@@ -9,7 +9,7 @@ const StyledResizePreview = styled.div`
   width: 0px;
   height: 0px;
   transition: all 0.3s ease-out;
-  background: #fff;
+  background: ${p => p.theme.resizePreview.color};
   opacity: ${p => p.theme.resizePreview.opacity};
   border-radius: ${p => p.theme.desktopWindow.borderRadius};
 `;

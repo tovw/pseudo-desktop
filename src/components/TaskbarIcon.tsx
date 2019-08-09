@@ -44,13 +44,18 @@ const StyledTaskbarIcon = styled.div.attrs<UIWindowProps & DragInfoProps>(
   .top {
     max-height: ${p =>
       p.noDragOrInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
-    transition: max-height 0.3s;
+    opacity: ${p =>
+      p.noDragOrInTaskbar
+        ? p.theme.taskbarIcon.topHalfOpacity
+        : p.theme.desktopWindow.bodyOpacity + 0.1};
+    transition: all 0.3s;
   }
   .bottom {
     opacity: ${p =>
-      !p.noDragOrInTaskbar
-        ? p.theme.desktopWindow.bodyOpacity + 0.1
-        : p.theme.taskbarIcon.bottomHalfOpacity};
+      p.noDragOrInTaskbar
+        ? p.theme.taskbarIcon.bottomHalfOpacity
+        : p.theme.desktopWindow.bodyOpacity + 0.1};
+    transition: all 0.3s;
   }
 `;
 
