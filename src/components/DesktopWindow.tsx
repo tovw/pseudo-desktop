@@ -5,22 +5,26 @@ import styled, { Theme } from '../theme';
 import { Coordinate, UIWindow } from '../utils/types';
 import { DragContainer } from './DragContainer';
 import { ThemeContext } from 'styled-components';
+import { Resizer } from './Resizer';
 
 const StyledWindowContainer = styled.div<
   DragInfoProps & UIWindowProps & SiblingActiveProps & { isResizing: boolean }
 >`
   width: ${p =>
-    p.isDragInTaskbar
+    p.isResizing
+      ? //StyledComps will generate a style for each different number wihtout this
+        undefined
+      : p.isDragInTaskbar
       ? p.theme.taskbarIcon.iconSideLength
-      : p.isResizing
-      ? ''
       : p.uiWindow.dimensions.width}px;
+
   height: ${p =>
-    p.isDragInTaskbar
+    p.isResizing
+      ? undefined
+      : p.isDragInTaskbar
       ? p.theme.taskbarIcon.iconSideLength
-      : p.isResizing
-      ? ''
       : p.uiWindow.dimensions.height}px;
+
   overflow: hidden;
 
   border-radius: ${p =>
@@ -31,7 +35,7 @@ const StyledWindowContainer = styled.div<
   box-shadow: ${p =>
     p.isDragging
       ? p.isDragInTaskbar
-        ? ''
+        ? undefined
         : p.theme.elevation.high
       : p.theme.elevation.low};
 
@@ -47,7 +51,7 @@ const StyledWindowContainer = styled.div<
     flex: auto;
   }
 
-  > :first-child {
+  .header {
     max-height: ${p =>
       p.isDragInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
 
@@ -58,24 +62,12 @@ const StyledWindowContainer = styled.div<
       (p.isDragging ? 0.1 : 0)};
   }
 
-  > :last-child {
+  .body {
     opacity: ${p =>
       p.theme.desktopWindow.bodyOpacity -
       (p.isSiblingActive ? 0.2 : 0) +
       (p.isDragging ? 0.1 : 0)};
   }
-`;
-
-const StyledResizer = styled.div`
-  background: rgba(0, 0, 0, 0.1);
-  position: absolute;
-  right: -3rem;
-  bottom: -3rem;
-  height: 6rem;
-  width: 5rem;
-  cursor: se-resize;
-  z-index: 1;
-  transform: rotate(45deg);
 `;
 
 export interface UIWindowProps {
@@ -128,10 +120,15 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
     isSiblingActive
   }) => {
     const [offsets, setOffsets] = useState<Coordinate | undefined>();
-    const [dragCoordinate, setDrag] = useState<Coordinate | undefined>();
+
+    const [dragCoordinate, setDragCoordinate] = useState<
+      Coordinate | undefined
+    >();
+
     const {
       taskbarIcon: { iconSideLength, iconMargin }
     } = useContext<Theme>(ThemeContext);
+
     const [isResizing, setIsResizing] = useState(false);
 
     const {
@@ -150,13 +147,13 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
     };
 
     const onDrag: DraggableEventHandler = (_, { x, y }) => {
-      setDrag({ x, y });
+      setDragCoordinate({ x, y });
       drag({ x, y });
     };
 
     const onStop: DraggableEventHandler = (_, { x, y }) => {
-      dragEnd({ x, y }, offsets || { x: 0, y: 0 });
-      setDrag(undefined);
+      dragEnd({ x, y }, offsets!);
+      setDragCoordinate(undefined);
       setOffsets(undefined);
     };
 
@@ -164,7 +161,8 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
       setIsResizing(true);
       resizeStart(id);
     };
-    const onResizeStop = () => {
+
+    const onResizeEnd = () => {
       setIsResizing(false);
       resizeEnd();
     };
@@ -172,16 +170,7 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
     const onResize: DraggableEventHandler = (_, { deltaX: x, deltaY: y }) =>
       resize({ x, y });
 
-    const onClick = (e: React.MouseEvent | React.TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      bringToFront(id);
-    };
-
-    const dragInfoProps = {
-      isDragInTaskbar: !!dragCoordinate && dragCoordinate.y < 100,
-      isDragging: !!offsets
-    };
+    const onClick = () => bringToFront(id);
 
     return (
       <DraggableCore
@@ -200,21 +189,24 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
           )}
         >
           <StyledWindowContainer
-            {...dragInfoProps}
+            isDragInTaskbar={!!dragCoordinate && dragCoordinate.y < 100}
+            isDragging={!!dragCoordinate}
             uiWindow={uiWindow}
             isSiblingActive={isSiblingActive}
             isResizing={isResizing}
             style={isResizing ? { ...dimensions } : undefined}
           >
             <div className="header"></div>
-            <DraggableCore
+            <div
+              className="body"
+              onClick={onClick}
+              onTouchStart={onClick}
+            ></div>
+            <Resizer
               onStart={onResizeStart}
               onDrag={onResize}
-              onStop={onResizeStop}
-            >
-              <StyledResizer />
-            </DraggableCore>
-            <div onClick={onClick} onTouchStart={onClick}></div>
+              onStop={onResizeEnd}
+            />
           </StyledWindowContainer>
         </DragContainer>
       </DraggableCore>

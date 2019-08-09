@@ -1,11 +1,4 @@
-import React, {
-  CSSProperties,
-  FC,
-  memo,
-  useEffect,
-  useRef,
-  useState
-} from 'react';
+import React, { FC, memo, useEffect, useRef, useState } from 'react';
 import styled from '../theme';
 import { Coordinate, Dimensions } from '../utils/types';
 
@@ -21,11 +14,7 @@ const StyledResizePreview = styled.div`
   border-radius: ${p => p.theme.desktopWindow.borderRadius};
 `;
 
-const getResizePreviewPositionStyles = (
-  other: CSSProperties,
-  coordinate: Coordinate
-) => ({
-  ...other,
+const getTranslate = (coordinate: Coordinate) => ({
   transform: `translateX(${coordinate.x}px) translateY(${coordinate.y}px)`
 });
 
@@ -36,7 +25,15 @@ export const ResizePreview: FC<{
     toCoordinate: Coordinate;
   };
 }> = memo(({ showResizePreview }) => {
+  //When the preview changes from one preview to another, just transition
+  //when it changes from undefined to a preview, animate in from triggeredFrom
   const [isFirstRender, setIsFirstRender] = useState(false);
+  useEffect(() => {
+    setTimeout(() => setIsFirstRender(!showResizePreview), 0);
+  }, [!showResizePreview]);
+
+  //When the preview changes to undefined
+  //animate to 0px by 0px and to the last triggeredFrom position
   const previousOrigin = useRef<Coordinate>({ x: 0, y: 0 });
   useEffect(() => {
     if (showResizePreview) {
@@ -46,20 +43,15 @@ export const ResizePreview: FC<{
 
   const positionStyle = showResizePreview
     ? isFirstRender
-      ? getResizePreviewPositionStyles(
-          { transition: 'all 0s' },
-          showResizePreview.triggeredFrom
-        )
-      : getResizePreviewPositionStyles(
-          showResizePreview.dimensions,
-          showResizePreview.toCoordinate
-        )
-    : getResizePreviewPositionStyles({}, previousOrigin.current);
-
-  const hasResizePreview = !!showResizePreview;
-  useEffect(() => {
-    setTimeout(() => setIsFirstRender(!hasResizePreview), 0);
-  }, [hasResizePreview]);
+      ? {
+          ...getTranslate(showResizePreview.triggeredFrom),
+          transition: 'all 0s'
+        }
+      : {
+          ...getTranslate(showResizePreview.toCoordinate),
+          ...showResizePreview.dimensions
+        }
+    : getTranslate(previousOrigin.current);
 
   return <StyledResizePreview style={positionStyle} />;
 });
