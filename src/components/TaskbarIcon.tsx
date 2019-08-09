@@ -1,5 +1,5 @@
 import React, { FC, memo, useContext, useEffect, useState } from 'react';
-import { DraggableCore, DraggableEventHandler } from 'react-draggable';
+import { DraggableEventHandler } from 'react-draggable';
 import { ThemeContext } from 'styled-components';
 import { useDesktopActions } from '../state/desktopContext';
 import styled, { Theme } from '../theme';
@@ -158,21 +158,24 @@ export const TaskbarIcon: FC<UIWindowProps & OrderProps> = memo(
     );
 
     return (
-      <DraggableCore onStart={onStart} onDrag={onDrag} onStop={onStop}>
-        <DragContainer style={positionStyle}>
-          <StyledTaskbarIcon
-            isDragging={!!dragCoordinate}
-            isDragInTaskbar={
-              !!dragCoordinate &&
-              dragCoordinate.y < 2 * iconMargin + iconSideLength
-            }
-            uiWindow={uiWindow}
-          >
-            <div className="top"></div>
-            <div className="bottom"></div>
-          </StyledTaskbarIcon>
-        </DragContainer>
-      </DraggableCore>
+      <DragContainer
+        positionStyles={positionStyle}
+        onStart={onStart}
+        onDrag={onDrag}
+        onStop={onStop}
+      >
+        <StyledTaskbarIcon
+          isDragging={!!dragCoordinate}
+          isDragInTaskbar={
+            !!dragCoordinate &&
+            dragCoordinate.y < 2 * iconMargin + iconSideLength
+          }
+          uiWindow={uiWindow}
+        >
+          <div className="top"></div>
+          <div className="bottom"></div>
+        </StyledTaskbarIcon>
+      </DragContainer>
     );
   }
 );

@@ -1,5 +1,5 @@
 import React, { FC, useState, memo, useContext } from 'react';
-import { DraggableCore, DraggableEventHandler } from 'react-draggable';
+import { DraggableEventHandler } from 'react-draggable';
 import { useDesktopActions } from '../state/desktopContext';
 import styled, { Theme } from '../theme';
 import { Coordinate, UIWindow } from '../utils/types';
@@ -173,43 +173,36 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
     const onClick = () => bringToFront(id);
 
     return (
-      <DraggableCore
+      <DragContainer
+        positionStyles={getDesktopPositionStyle(
+          topLeftPosition,
+          iconMargin,
+          iconSideLength,
+          dragCoordinate,
+          offsets
+        )}
         onStart={onStart}
         onDrag={onDrag}
         onStop={onStop}
         handle=".header"
       >
-        <DragContainer
-          style={getDesktopPositionStyle(
-            topLeftPosition,
-            iconMargin,
-            iconSideLength,
-            dragCoordinate,
-            offsets
-          )}
+        <StyledWindowContainer
+          isDragInTaskbar={!!dragCoordinate && dragCoordinate.y < 100}
+          isDragging={!!dragCoordinate}
+          uiWindow={uiWindow}
+          isSiblingActive={isSiblingActive}
+          isResizing={isResizing}
+          style={isResizing ? { ...dimensions } : undefined}
         >
-          <StyledWindowContainer
-            isDragInTaskbar={!!dragCoordinate && dragCoordinate.y < 100}
-            isDragging={!!dragCoordinate}
-            uiWindow={uiWindow}
-            isSiblingActive={isSiblingActive}
-            isResizing={isResizing}
-            style={isResizing ? { ...dimensions } : undefined}
-          >
-            <div className="header"></div>
-            <div
-              className="body"
-              onClick={onClick}
-              onTouchStart={onClick}
-            ></div>
-            <Resizer
-              onStart={onResizeStart}
-              onDrag={onResize}
-              onStop={onResizeEnd}
-            />
-          </StyledWindowContainer>
-        </DragContainer>
-      </DraggableCore>
+          <div className="header"></div>
+          <div className="body" onClick={onClick} onTouchStart={onClick}></div>
+          <Resizer
+            onStart={onResizeStart}
+            onDrag={onResize}
+            onStop={onResizeEnd}
+          />
+        </StyledWindowContainer>
+      </DragContainer>
     );
   }
 );
