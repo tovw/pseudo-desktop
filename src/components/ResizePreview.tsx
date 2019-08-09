@@ -18,12 +18,14 @@ const getTranslate = (coordinate: Coordinate) => ({
   transform: `translateX(${coordinate.x}px) translateY(${coordinate.y}px)`
 });
 
+export interface ResizePreviewProps {
+  dimensions: Dimensions;
+  triggeredFrom: Coordinate;
+  toCoordinate: Coordinate;
+}
+
 export const ResizePreview: FC<{
-  showResizePreview?: {
-    dimensions: Dimensions;
-    triggeredFrom: Coordinate;
-    toCoordinate: Coordinate;
-  };
+  showResizePreview?: ResizePreviewProps;
 }> = memo(({ showResizePreview }) => {
   //When the preview changes from one preview to another, just transition
   //when it changes from undefined to a preview, animate in from triggeredFrom

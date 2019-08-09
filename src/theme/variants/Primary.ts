@@ -16,7 +16,7 @@ export const Primary: Theme = {
   desktopWindow: {
     bodyOpacity: 0.5,
     headerOpacity: 1,
-    borderRadius: '10px',
+    borderRadius: '20px',
     headerHeight: '2.5rem'
   },
   elevation: {

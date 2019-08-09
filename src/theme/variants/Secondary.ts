@@ -20,7 +20,7 @@ export const Secondary: Theme = {
     headerHeight: '3rem'
   },
   elevation: {
-    high: '0px 0px 20px 5px rgba(0, 0, 0, 0.3)',
-    low: '0px 0px 10px 2px rgba(0, 0, 0, 0.4)'
+    high: '6px 6px 6px 8px rgba(0, 0, 0, 0.3)',
+    low: '3px 3px 3px 3px rgba(0, 0, 0, 0.50)'
   }
 };
