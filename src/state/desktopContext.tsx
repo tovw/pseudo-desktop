@@ -3,15 +3,15 @@ import React, {
   createContext,
   FC,
   useContext,
+  useEffect,
   useMemo,
-  useReducer,
-  useEffect
+  useReducer
 } from 'react';
+import { ThemeContext } from 'styled-components';
+import { ResizePreviewProps } from '../components/ResizePreview';
+import { Theme } from '../theme';
 import { dragIsInPreviewTriggerArea } from '../utils/dragIsInTriggerArea';
 import { Coordinate, Dimensions, UIWindow } from '../utils/types';
-import { ThemeContext } from 'styled-components';
-import { Theme } from '../theme';
-import { ResizePreviewProps } from '../components/ResizePreview';
 
 export interface DesktopState {
   uiWindows: Record<string, UIWindow>;
@@ -140,14 +140,15 @@ const getTaskbarIconIndex = (
   taskbarIconsCount: number,
   dragX: number
 ) =>
-  Math.abs(
+  Math.max(
     Math.min(
       taskbarIconsCount - 1,
       Math.ceil(
         (dragX - taskbarIconMargin - 0.5 * taskbarIconSideLength) /
           (taskbarIconMargin + taskbarIconSideLength)
       )
-    )
+    ),
+    0
   );
 
 const adjustTaskbarIconOrder = (

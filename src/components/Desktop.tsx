@@ -1,13 +1,12 @@
 import React, { FC } from 'react';
-import styled from '../theme';
-import { DesktopWindow } from './DesktopWindow';
-
 import {
-  useDesktopState,
+  TASKBAR_POSITION_PLACEHOLDER,
   useDesktopActions,
-  TASKBAR_POSITION_PLACEHOLDER
+  useDesktopState
 } from '../state/desktopContext';
+import styled from '../theme';
 import { useDimensions } from '../utils/useDimensions';
+import { DesktopWindow } from './DesktopWindow';
 import { ResizePreview } from './ResizePreview';
 import { TaskbarIcon } from './TaskbarIcon';
 import { ThemeSwitch } from './ThemeSwitch';
@@ -16,9 +15,9 @@ const StyledDesktop = styled.div`
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: ${p => p.theme.color.desktopBackground};
+  background-color: ${p => p.theme.color.desktopBackground};
   position: relative;
-  transition: all 0.3s ease-in-out;
+  transition: background-color 0.3s ease-in-out;
 `;
 
 const StyledTaskbar = styled.div`
