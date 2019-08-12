@@ -1,10 +1,10 @@
-import React, { FC, useState, memo, useContext } from 'react';
+import React, { FC, memo, useContext, useState } from 'react';
 import { DraggableEventHandler } from 'react-draggable';
+import { ThemeContext } from 'styled-components';
 import { useDesktopActions } from '../state/DesktopContext';
 import styled, { Theme } from '../theme';
 import { Coordinate, UIWindow } from '../utils/types';
 import { DragContainer } from './DragContainer';
-import { ThemeContext } from 'styled-components';
 import { Resizer } from './Resizer';
 
 const StyledWindowContainer = styled.div<
@@ -187,7 +187,10 @@ export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
         handle=".header"
       >
         <StyledWindowContainer
-          isDragInTaskbar={!!dragCoordinate && dragCoordinate.y < 100}
+          isDragInTaskbar={
+            !!dragCoordinate &&
+            dragCoordinate.y < iconMargin * 2 + iconSideLength
+          }
           isDragging={!!dragCoordinate}
           uiWindow={uiWindow}
           isSiblingActive={isSiblingActive}

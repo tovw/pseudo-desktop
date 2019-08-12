@@ -36,7 +36,6 @@ export const Desktop: FC = () => {
   } = useDesktopState();
   const { setDesktopDimensions } = useDesktopActions();
   const { ref } = useDimensions(setDesktopDimensions);
-  console.log('dzi:', desktopZindexes);
   return (
     <StyledDesktop ref={ref}>
       <StyledTaskbar>
@@ -48,15 +47,13 @@ export const Desktop: FC = () => {
         )}
         <ThemeSwitch />
       </StyledTaskbar>
-      {desktopZindexes.map(id => {
-        return (
-          <DesktopWindow
-            key={id}
-            uiWindow={uiWindows[id]}
-            isSiblingActive={!!activeWindowId && activeWindowId !== id}
-          />
-        );
-      })}
+      {desktopZindexes.map(id => (
+        <DesktopWindow
+          key={id}
+          uiWindow={uiWindows[id]}
+          isSiblingActive={!!activeWindowId && activeWindowId !== id}
+        />
+      ))}
       <ResizePreview showResizePreview={showResizePreview} />
     </StyledDesktop>
   );

@@ -226,15 +226,13 @@ const dragEnd = (
   const fromTaskbar = !fromDesktop;
 
   if (fromDesktop && releaseInTaskbar) {
-    console.log('toT');
     const b = dragFromDesktopToTaskbar(state, drag, offsets);
     return b;
   }
 
   if (fromDesktop && releaseInDesktop) {
-    console.log('toD');
     const a = dragFromDesktopToDesktop(state, drag, offsets);
-    console.log(a);
+
     return a;
   }
 
@@ -279,7 +277,6 @@ export const desktopReducer = (
   state: DesktopState,
   action: Action
 ): DesktopState => {
-  console.log(state);
   switch (action.type) {
     case ActionTypes.DRAG_START: {
       dragVibrate();

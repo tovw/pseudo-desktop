@@ -9,11 +9,11 @@ import React, {
 import { ThemeContext } from 'styled-components';
 import { Theme } from '../theme';
 import {
+  actionCreators,
   ActionTypes,
-  DesktopActionCreators,
-  actionCreators
+  DesktopActionCreators
 } from './desktopActions';
-import { DesktopState, initialState, desktopReducer } from './desktopReducer';
+import { desktopReducer, DesktopState, initialState } from './desktopReducer';
 
 const DesktopStateContext = createContext<DesktopState>(initialState);
 const DesktopDispatchContext = createContext<DesktopActionCreators | null>(
