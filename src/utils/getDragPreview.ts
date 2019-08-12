@@ -1,7 +1,7 @@
 import { Coordinate, Dimensions } from './types';
 import { ResizePreviewProps } from '../components/ResizePreview';
 
-export const dragIsInPreviewTriggerArea = (
+export const getDragPreview = (
   triggeredFrom: Coordinate,
   dimensions: Dimensions,
   taskbarBottomEdge: number,

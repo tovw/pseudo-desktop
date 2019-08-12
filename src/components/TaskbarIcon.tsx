@@ -1,7 +1,7 @@
 import React, { FC, memo, useContext, useEffect, useState } from 'react';
 import { DraggableEventHandler } from 'react-draggable';
 import { ThemeContext } from 'styled-components';
-import { useDesktopActions } from '../state/desktopContext';
+import { useDesktopActions } from '../state/DesktopContext';
 import styled, { Theme } from '../theme';
 import { Coordinate } from '../utils/types';
 import { DragInfoProps, OrderProps, UIWindowProps } from './DesktopWindow';

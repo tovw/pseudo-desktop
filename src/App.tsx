@@ -2,7 +2,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import { GlobalStyle } from './theme';
 import { Desktop } from './components/Desktop';
-import { DesktopStateProvider } from './state/desktopContext';
+import { DesktopStateProvider } from './state/DesktopContext';
 import { ThemeContext } from './state/ThemeContext';
 
 const App = () => (

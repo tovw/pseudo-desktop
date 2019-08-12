@@ -6,9 +6,9 @@ const Themes: Theme[] = [Primary, Secondary];
 const SetThemeContext = React.createContext<(index: number) => void>(() => {});
 
 export const ThemeContext: FC = ({ children }) => {
-  const [ActiveThemeIndex, setActiveThemeIndex] = useState(0);
+  const [activeThemeIndex, setActiveThemeIndex] = useState(0);
   return (
-    <ThemeProvider theme={Themes[ActiveThemeIndex]}>
+    <ThemeProvider theme={Themes[activeThemeIndex]}>
       <SetThemeContext.Provider value={setActiveThemeIndex}>
         {children}
       </SetThemeContext.Provider>

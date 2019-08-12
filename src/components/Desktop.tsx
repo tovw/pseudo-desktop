@@ -1,9 +1,6 @@
 import React, { FC } from 'react';
-import {
-  TASKBAR_POSITION_PLACEHOLDER,
-  useDesktopActions,
-  useDesktopState
-} from '../state/desktopContext';
+import { useDesktopActions, useDesktopState } from '../state/DesktopContext';
+import { TASKBAR_POSITION_PLACEHOLDER } from '../state/desktopReducer';
 import styled from '../theme';
 import { useDimensions } from '../utils/useDimensions';
 import { DesktopWindow } from './DesktopWindow';
@@ -39,7 +36,7 @@ export const Desktop: FC = () => {
   } = useDesktopState();
   const { setDesktopDimensions } = useDesktopActions();
   const { ref } = useDimensions(setDesktopDimensions);
-
+  console.log('dzi:', desktopZindexes);
   return (
     <StyledDesktop ref={ref}>
       <StyledTaskbar>
@@ -51,13 +48,15 @@ export const Desktop: FC = () => {
         )}
         <ThemeSwitch />
       </StyledTaskbar>
-      {desktopZindexes.map(id => (
-        <DesktopWindow
-          key={id}
-          uiWindow={uiWindows[id]}
-          isSiblingActive={!!activeWindowId && activeWindowId !== id}
-        />
-      ))}
+      {desktopZindexes.map(id => {
+        return (
+          <DesktopWindow
+            key={id}
+            uiWindow={uiWindows[id]}
+            isSiblingActive={!!activeWindowId && activeWindowId !== id}
+          />
+        );
+      })}
       <ResizePreview showResizePreview={showResizePreview} />
     </StyledDesktop>
   );

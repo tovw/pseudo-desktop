@@ -7,7 +7,7 @@ export const Secondary: Theme = {
   },
   resizePreview: { opacity: 0.5, color: '#000' },
   taskbarIcon: {
-    iconSideLength: 80,
+    iconSideLength: 60,
     iconMargin: 10,
     topHalfOpacity: 1,
     bottomHalfOpacity: 0.5,
