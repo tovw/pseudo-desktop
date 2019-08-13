@@ -2,8 +2,8 @@ import { Theme } from '..';
 
 export const Secondary: Theme = {
   color: {
-    desktopBackground: '#404552',
-    taskbarBackground: '#383c4a'
+    desktopBackground: '#505562',
+    taskbarBackground: '#282c3a'
   },
   resizePreview: { opacity: 0.5, color: '#000' },
   taskbarIcon: {
