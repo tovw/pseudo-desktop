@@ -18,6 +18,7 @@ export default interface Theme {
     headerHeight: string;
     headerOpacity: number;
     bodyOpacity: number;
+    bodyDragOpacity: number;
     borderRadius: string;
   };
   elevation: {

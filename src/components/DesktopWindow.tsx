@@ -56,6 +56,7 @@ const StyledWindowContainer = styled.div<
       p.isDragInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
 
     transition: max-height 0.2s;
+
     opacity: ${p =>
       p.theme.desktopWindow.headerOpacity -
       (p.isSiblingActive ? 0.2 : 0) +

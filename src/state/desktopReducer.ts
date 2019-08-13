@@ -18,8 +18,8 @@ export interface DesktopState {
   desktopWindowMinSize: number;
 }
 export const initialState: DesktopState = {
-  resizePreviewCornerTriggerArea: 50,
-  resizePreviewSideTriggerArea: 25,
+  resizePreviewCornerTriggerArea: 30,
+  resizePreviewSideTriggerArea: 15,
   desktopWindowMinSize: 100,
   desktopZindexes: ['1', '2'],
   taskBarIconOrder: ['3', '4'],
@@ -68,37 +68,42 @@ const assertNever = (x: never): never => {
   throw new Error('Invalid Action: ' + x);
 };
 
-const moveUniqueItemToTail = <T extends {}>(array: T[], item: T) => {
+function moveUniqueItemToTail<T extends {}>(array: T[], item: T) {
   const index = array.findIndex(o => o === item);
   return index > -1 ? move(array, index, array.length - 1) : array;
-};
+}
 
-const dragOriginIsDesktop = (
+function dragOriginIsDesktop(
   desktopZindexes: string[],
   draggingWindowId?: string
-) => desktopZindexes.some(idx => idx === draggingWindowId);
+) {
+  return desktopZindexes.some(idx => idx === draggingWindowId);
+}
 
-const dragIsInTaskBar = (
+function dragIsInTaskBar(
   taskbarIconSideLength: number,
   taskbarIconMargin: number,
   dragY: number
-) => taskbarIconMargin * 2 + taskbarIconSideLength >= dragY;
+) {
+  return taskbarIconMargin * 2 + taskbarIconSideLength >= dragY;
+}
 
-const getTaskbarIconIndex = (
+function getTaskbarIconIndex(
   margin: number,
   side: number,
   iconsCount: number,
   dragX: number
-) =>
-  Math.max(
+) {
+  return Math.max(
     Math.min(
       Math.ceil((dragX - margin - 0.5 * side) / (margin + side)),
       iconsCount - 1
     ),
     0
   );
+}
 
-const adjustTaskbarIconOrder = (
+function getTaskbarIconOrder(
   {
     taskbarIconSideLength: l,
     taskbarIconMargin: m,
@@ -106,113 +111,120 @@ const adjustTaskbarIconOrder = (
     activeWindowId
   }: DesktopState,
   drag: Coordinate
-) => {
+) {
   const oldIndex = order.findIndex(
     id => id === activeWindowId || id === TASKBAR_POSITION_PLACEHOLDER
   );
   return dragIsInTaskBar(l, m, drag.y)
     ? move(order, oldIndex, getTaskbarIconIndex(m, l, order.length, drag.x))
     : move(order, oldIndex, order.length - 1);
-};
+}
 
-const updateWindowToPreview = (
+function updateWindowToPreview(
   uiWindow: UIWindow,
   dragPreview: ResizePreviewProps
-) => ({
-  ...uiWindow,
-  topLeftPosition: dragPreview.toCoordinate,
-  dimensions: dragPreview.dimensions
-});
+) {
+  return {
+    ...uiWindow,
+    topLeftPosition: dragPreview.toCoordinate,
+    dimensions: dragPreview.dimensions
+  };
+}
 
-const updateWindowPosition = (
+function updateWindowPosition(
   uiWindow: UIWindow,
   coordinate: Coordinate,
   offsets: Coordinate
-) => ({
-  ...uiWindow,
-  topLeftPosition: {
-    x: coordinate.x - offsets.x,
-    y: coordinate.y - offsets.y
-  }
-});
+) {
+  return {
+    ...uiWindow,
+    topLeftPosition: {
+      x: coordinate.x - offsets.x,
+      y: coordinate.y - offsets.y
+    }
+  };
+}
 
-const updateWindowAfterDrag = (
+function updateWindowOnDragEnd(
   uiWindow: UIWindow,
   coordinate: Coordinate,
   offsets: Coordinate,
   dragPreview?: ResizePreviewProps
-) =>
-  dragPreview
+) {
+  return dragPreview
     ? updateWindowToPreview(uiWindow, dragPreview)
     : updateWindowPosition(uiWindow, coordinate, offsets);
+}
 
-const dragFromDesktopToTaskbar = (
+function dragFromDesktopToTaskbar(
   state: DesktopState,
   drag: Coordinate,
   offsets: Coordinate
-) => ({
-  taskBarIconOrder: adjustTaskbarIconOrder(state, drag).map(id =>
-    id !== TASKBAR_POSITION_PLACEHOLDER ? id : state.activeWindowId!
-  ),
-  desktopZindexes: state.desktopZindexes.filter(
-    id => id !== state.activeWindowId
-  ),
-  uiWindows: {
-    ...state.uiWindows,
-    [state.activeWindowId!]: {
-      ...state.uiWindows[state.activeWindowId!],
-      animateInFrom: {
-        x: drag.x - Math.min(offsets.x, state.taskbarIconSideLength / 2),
-        y: state.taskbarIconMargin
+) {
+  return {
+    taskBarIconOrder: getTaskbarIconOrder(state, drag).map(id =>
+      id !== TASKBAR_POSITION_PLACEHOLDER ? id : state.activeWindowId!
+    ),
+    desktopZindexes: state.desktopZindexes.filter(
+      id => id !== state.activeWindowId
+    ),
+    uiWindows: {
+      ...state.uiWindows,
+      [state.activeWindowId!]: {
+        ...state.uiWindows[state.activeWindowId!],
+        animateInFrom: {
+          x: drag.x - Math.min(offsets.x, state.taskbarIconSideLength / 2),
+          y: state.taskbarIconMargin
+        }
       }
     }
-  }
-});
+  };
+}
 
-const dragFromDesktopToDesktop = (
+function dragFromDesktopToDesktop(
   state: DesktopState,
   drag: Coordinate,
   offsets: Coordinate
-) => ({
-  taskBarIconOrder: state.taskBarIconOrder.filter(
-    id => id !== TASKBAR_POSITION_PLACEHOLDER
-  ),
-  uiWindows: {
-    ...state.uiWindows,
-    [state.activeWindowId!]: updateWindowAfterDrag(
-      state.uiWindows[state.activeWindowId!],
-      drag,
-      offsets,
-      state.showResizePreview
-    )
-  }
-});
+) {
+  return {
+    taskBarIconOrder: state.taskBarIconOrder.filter(
+      id => id !== TASKBAR_POSITION_PLACEHOLDER
+    ),
+    uiWindows: {
+      ...state.uiWindows,
+      [state.activeWindowId!]: updateWindowOnDragEnd(
+        state.uiWindows[state.activeWindowId!],
+        drag,
+        offsets,
+        state.showResizePreview
+      )
+    }
+  };
+}
 
-const dragFromTaskbarToDesktop = (
+function dragFromTaskbarToDesktop(
   state: DesktopState,
   drag: Coordinate,
   offsets: Coordinate
-) => ({
-  taskBarIconOrder: state.taskBarIconOrder.filter(
-    id => id !== state.activeWindowId
-  ),
-  desktopZindexes: [...state.desktopZindexes, state.activeWindowId!],
-  uiWindows: {
-    ...state.uiWindows,
-    [state.activeWindowId!]: updateWindowAfterDrag(
-      state.uiWindows[state.activeWindowId!],
-      drag,
-      offsets,
-      state.showResizePreview
-    )
-  }
-});
+) {
+  return {
+    taskBarIconOrder: state.taskBarIconOrder.filter(
+      id => id !== state.activeWindowId
+    ),
+    desktopZindexes: [...state.desktopZindexes, state.activeWindowId!],
+    uiWindows: {
+      ...state.uiWindows,
+      [state.activeWindowId!]: updateWindowOnDragEnd(
+        state.uiWindows[state.activeWindowId!],
+        drag,
+        offsets,
+        state.showResizePreview
+      )
+    }
+  };
+}
 
-const dragEnd = (
-  state: DesktopState,
-  drag: Coordinate,
-  offsets: Coordinate
-) => {
+function dragEnd(state: DesktopState, drag: Coordinate, offsets: Coordinate) {
   const releaseInTaskbar = dragIsInTaskBar(
     state.taskbarIconSideLength,
     state.taskbarIconMargin,
@@ -226,14 +238,11 @@ const dragEnd = (
   const fromTaskbar = !fromDesktop;
 
   if (fromDesktop && releaseInTaskbar) {
-    const b = dragFromDesktopToTaskbar(state, drag, offsets);
-    return b;
+    return dragFromDesktopToTaskbar(state, drag, offsets);
   }
 
   if (fromDesktop && releaseInDesktop) {
-    const a = dragFromDesktopToDesktop(state, drag, offsets);
-
-    return a;
+    return dragFromDesktopToDesktop(state, drag, offsets);
   }
 
   if (fromTaskbar && releaseInDesktop) {
@@ -241,37 +250,41 @@ const dragEnd = (
   }
 
   return state;
-};
+}
 
-const resizeWindow = (state: DesktopState, deltas: Coordinate) => {
-  const { activeWindowId, uiWindows, desktopWindowMinSize } = state;
-  if (!activeWindowId) return state;
-
-  const window = uiWindows[activeWindowId];
+function resizeWindow(
+  { uiWindows, activeWindowId, desktopWindowMinSize }: DesktopState,
+  deltas: Coordinate
+) {
   return {
-    ...state,
     uiWindows: {
       ...uiWindows,
-      [activeWindowId]: {
-        ...window,
+      [activeWindowId!]: {
+        ...uiWindows[activeWindowId!],
         dimensions: {
           width: Math.max(
-            window.dimensions.width + deltas.x,
+            uiWindows[activeWindowId!].dimensions.width + deltas.x,
             desktopWindowMinSize
           ),
           height: Math.max(
-            window.dimensions.height + deltas.y,
+            uiWindows[activeWindowId!].dimensions.height + deltas.y,
             desktopWindowMinSize
           )
         }
       }
     }
   };
-};
+}
 
-const vibrate = (time: number | number[]) => window.navigator.vibrate(time);
-const dragVibrate = () => vibrate(30);
-const dragEndVibrate = () => vibrate(15);
+function vibrate(time: number | number[]) {
+  window.navigator.vibrate(time);
+}
+function dragStartVibrate() {
+  vibrate(30);
+}
+function dragEndVibrate() {
+  vibrate(15);
+}
 
 export const desktopReducer = (
   state: DesktopState,
@@ -279,7 +292,7 @@ export const desktopReducer = (
 ): DesktopState => {
   switch (action.type) {
     case ActionTypes.DRAG_START: {
-      dragVibrate();
+      dragStartVibrate();
       return {
         ...state,
         activeWindowId: action.payload.id,
@@ -306,10 +319,7 @@ export const desktopReducer = (
           state.resizePreviewCornerTriggerArea,
           state.resizePreviewSideTriggerArea
         ),
-        taskBarIconOrder: adjustTaskbarIconOrder(
-          state,
-          action.payload.coordinate
-        )
+        taskBarIconOrder: getTaskbarIconOrder(state, action.payload.coordinate)
       };
 
     case ActionTypes.DRAG_END:
@@ -328,7 +338,7 @@ export const desktopReducer = (
       };
 
     case ActionTypes.RESIZE_START:
-      dragVibrate();
+      dragStartVibrate();
       return {
         ...state,
         activeWindowId: action.payload.id,
@@ -339,7 +349,7 @@ export const desktopReducer = (
       };
 
     case ActionTypes.RESIZE:
-      return resizeWindow(state, action.payload.coordinate);
+      return { ...state, ...resizeWindow(state, action.payload.coordinate) };
 
     case ActionTypes.RESIZE_END:
       dragEndVibrate();

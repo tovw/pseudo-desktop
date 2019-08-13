@@ -3,19 +3,20 @@ import { Theme } from '..';
 export const Primary: Theme = {
   color: {
     desktopBackground: '#E6E6F2',
-    taskbarBackground: '#93939B'
+    taskbarBackground: '#B5B5BB'
   },
   resizePreview: { opacity: 0.5, color: '#fff' },
   taskbarIcon: {
     iconSideLength: 60,
     iconMargin: 10,
     topHalfOpacity: 0.8,
-    bottomHalfOpacity: 0.3,
+    bottomHalfOpacity: 0.4,
     borderRadius: '15px'
   },
   desktopWindow: {
-    bodyOpacity: 0.5,
-    headerOpacity: 1,
+    bodyOpacity: 0.6,
+    bodyDragOpacity: 0.7,
+    headerOpacity: 0.9,
     borderRadius: '20px',
     headerHeight: '2.5rem'
   },
