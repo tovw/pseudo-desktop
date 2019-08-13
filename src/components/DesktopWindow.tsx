@@ -8,11 +8,11 @@ import { DragContainer } from './DragContainer';
 import { Resizer } from './Resizer';
 
 const StyledWindowContainer = styled.div<
-  DragInfoProps & UIWindowProps & SiblingActiveProps & { isResizing: boolean }
+  DragInfoProps & UIWindowProps & StyledDesktopWindowProps
 >`
   width: ${p =>
     p.isResizing
-      ? //StyledComps will generate a style for each different number wihtout this
+      ? //StyledComps will generate a style for each different number when resizing without this
         undefined
       : p.isDragInTaskbar
       ? p.theme.taskbarIcon.iconSideLength
@@ -42,9 +42,10 @@ const StyledWindowContainer = styled.div<
   display: flex;
   position: relative;
   flex-direction: column;
-  transition: ${p => (p.isResizing ? '' : 'all 0.3s')};
+  transition: ${p => (p.isResizing ? undefined : 'all 0.3s')};
 
-  filter: ${p => p.isSiblingActive && 'blur(2px)'};
+  filter: ${p =>
+    p.isSiblingActive && p.theme.desktopWindow.siblingActiveFilter};
 
   > * {
     background: ${p => p.uiWindow.color};
@@ -54,20 +55,12 @@ const StyledWindowContainer = styled.div<
   .header {
     max-height: ${p =>
       p.isDragInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
-
     transition: max-height 0.2s;
-
-    opacity: ${p =>
-      p.theme.desktopWindow.headerOpacity -
-      (p.isSiblingActive ? 0.2 : 0) +
-      (p.isDragging ? 0.1 : 0)};
+    opacity: ${p => p.theme.desktopWindow.headerOpacity};
   }
 
   .body {
-    opacity: ${p =>
-      p.theme.desktopWindow.bodyOpacity -
-      (p.isSiblingActive ? 0.2 : 0) +
-      (p.isDragging ? 0.1 : 0)};
+    opacity: ${p => p.theme.desktopWindow.bodyOpacity};
   }
 `;
 
@@ -84,8 +77,9 @@ export interface OrderProps {
   order: number;
 }
 
-export interface SiblingActiveProps {
+export interface StyledDesktopWindowProps {
   isSiblingActive: boolean;
+  isResizing: boolean;
 }
 
 const getDesktopPositionStyle = (
@@ -114,7 +108,7 @@ const getDesktopPositionStyle = (
   return { transform, paddingLeft, zIndex };
 };
 
-export const DesktopWindow: FC<UIWindowProps & SiblingActiveProps> = memo(
+export const DesktopWindow: FC<UIWindowProps & StyledDesktopWindowProps> = memo(
   ({
     uiWindow,
     uiWindow: { topLeftPosition, id, dimensions },

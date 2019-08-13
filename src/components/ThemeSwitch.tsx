@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react';
-import styled from '../theme';
 import { useSetTheme } from '../state/ThemeContext';
+import styled from '../theme';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const StyledSwitch = styled(({ on, ...props }) => (
@@ -33,7 +33,7 @@ export const ThemeSwitch: FC = () => {
   const updateTheme = useSetTheme();
 
   const onClick = () => {
-    updateTheme(Number(!!on));
+    updateTheme(+on);
     setValue(v => !v);
   };
 

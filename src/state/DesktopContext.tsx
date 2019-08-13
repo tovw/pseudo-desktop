@@ -27,7 +27,7 @@ export const DesktopStateProvider: FC = ({ children }) => {
     [dispatch]
   );
 
-  //Sync icon dimensions from theme when theme changes
+  //Sync icon dimensions to state from theme when theme changes
   const {
     taskbarIcon: { iconSideLength, iconMargin }
   } = useContext<Theme>(ThemeContext);

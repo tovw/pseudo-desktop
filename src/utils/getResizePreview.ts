@@ -1,7 +1,7 @@
-import { Coordinate, Dimensions } from './types';
 import { ResizePreviewProps } from '../components/ResizePreview';
+import { Coordinate, Dimensions } from './types';
 
-export const getDragPreview = (
+export const getResizePreview = (
   triggeredFrom: Coordinate,
   dimensions: Dimensions,
   taskbarBottomEdge: number,

@@ -18,8 +18,8 @@ export default interface Theme {
     headerHeight: string;
     headerOpacity: number;
     bodyOpacity: number;
-    bodyDragOpacity: number;
     borderRadius: string;
+    siblingActiveFilter: string;
   };
   elevation: {
     high: string;

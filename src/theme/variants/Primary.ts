@@ -15,10 +15,10 @@ export const Primary: Theme = {
   },
   desktopWindow: {
     bodyOpacity: 0.6,
-    bodyDragOpacity: 0.7,
     headerOpacity: 0.9,
     borderRadius: '20px',
-    headerHeight: '2.5rem'
+    headerHeight: '2.5rem',
+    siblingActiveFilter: 'grayscale(0.7)'
   },
   elevation: {
     high: '0px 0px 15px 5px rgba(0, 0, 0, 0.3)',

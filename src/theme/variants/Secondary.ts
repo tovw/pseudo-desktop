@@ -2,8 +2,8 @@ import { Theme } from '..';
 
 export const Secondary: Theme = {
   color: {
-    desktopBackground: '#452691',
-    taskbarBackground: '#26154f'
+    desktopBackground: '#404552',
+    taskbarBackground: '#383c4a'
   },
   resizePreview: { opacity: 0.5, color: '#000' },
   taskbarIcon: {
@@ -15,10 +15,10 @@ export const Secondary: Theme = {
   },
   desktopWindow: {
     bodyOpacity: 0.8,
-    bodyDragOpacity: 0.9,
     headerOpacity: 1,
     borderRadius: '0px',
-    headerHeight: '3.5rem'
+    headerHeight: '3.5rem',
+    siblingActiveFilter: 'blur(2px) grayscale(0.2)'
   },
   elevation: {
     high: '4px 4px 4px 6px rgba(33, 33, 33, 0.3)',

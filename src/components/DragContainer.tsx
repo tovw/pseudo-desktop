@@ -1,6 +1,6 @@
-import React, { FC, CSSProperties } from 'react';
+import React, { CSSProperties, FC } from 'react';
+import { DraggableCore, DraggableCoreProps } from 'react-draggable';
 import styled from '../theme';
-import { DraggableCoreProps, DraggableCore } from 'react-draggable';
 
 export const StyledDragContainer = styled.span`
   position: absolute;

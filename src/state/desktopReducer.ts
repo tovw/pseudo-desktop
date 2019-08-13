@@ -1,6 +1,6 @@
 import move from 'array-move';
 import { ResizePreviewProps } from '../components/ResizePreview';
-import { getDragPreview } from '../utils/getDragPreview';
+import { getResizePreview } from '../utils/getResizePreview';
 import { Coordinate, Dimensions, UIWindow } from '../utils/types';
 import { Action, ActionTypes } from './desktopActions';
 
@@ -34,14 +34,14 @@ export const initialState: DesktopState = {
   uiWindows: {
     '1': {
       id: '1',
-      topLeftPosition: { x: 100, y: 200 },
+      topLeftPosition: { x: 30, y: 200 },
       dimensions: { width: 300, height: 300 },
       color: '#A5DD97',
       animateInFrom: undefined
     },
     '2': {
       id: '2',
-      topLeftPosition: { y: 311, x: 231 },
+      topLeftPosition: { y: 350, x: 225 },
       dimensions: { width: 123, height: 234 },
       color: '#95A9F2',
       animateInFrom: undefined
@@ -64,6 +64,7 @@ export const initialState: DesktopState = {
 };
 export const TASKBAR_POSITION_PLACEHOLDER = 'TASKBAR_POSITION_PLACEHOLDER';
 
+//Helpers
 const assertNever = (x: never): never => {
   throw new Error('Invalid Action: ' + x);
 };
@@ -256,20 +257,16 @@ function resizeWindow(
   { uiWindows, activeWindowId, desktopWindowMinSize }: DesktopState,
   deltas: Coordinate
 ) {
+  const oldWindow = uiWindows[activeWindowId!];
+  const { width, height } = oldWindow.dimensions;
   return {
     uiWindows: {
       ...uiWindows,
       [activeWindowId!]: {
-        ...uiWindows[activeWindowId!],
+        ...oldWindow,
         dimensions: {
-          width: Math.max(
-            uiWindows[activeWindowId!].dimensions.width + deltas.x,
-            desktopWindowMinSize
-          ),
-          height: Math.max(
-            uiWindows[activeWindowId!].dimensions.height + deltas.y,
-            desktopWindowMinSize
-          )
+          width: Math.max(width + deltas.x, desktopWindowMinSize),
+          height: Math.max(height + deltas.y, desktopWindowMinSize)
         }
       }
     }
@@ -309,20 +306,21 @@ export const desktopReducer = (
       };
     }
 
-    case ActionTypes.DRAG:
+    case ActionTypes.DRAG: {
       return {
         ...state,
-        showResizePreview: getDragPreview(
+        taskBarIconOrder: getTaskbarIconOrder(state, action.payload.coordinate),
+        showResizePreview: getResizePreview(
           action.payload.coordinate,
           state.desktopDimensions,
           state.taskbarIconSideLength + state.taskbarIconMargin * 2,
           state.resizePreviewCornerTriggerArea,
           state.resizePreviewSideTriggerArea
-        ),
-        taskBarIconOrder: getTaskbarIconOrder(state, action.payload.coordinate)
+        )
       };
+    }
 
-    case ActionTypes.DRAG_END:
+    case ActionTypes.DRAG_END: {
       dragEndVibrate();
       return {
         ...state,
@@ -330,14 +328,16 @@ export const desktopReducer = (
         activeWindowId: undefined,
         showResizePreview: undefined
       };
+    }
 
-    case ActionTypes.SET_DESKTOP_DIMENSIONS:
+    case ActionTypes.SET_DESKTOP_DIMENSIONS: {
       return {
         ...state,
         desktopDimensions: action.payload.dimensions
       };
+    }
 
-    case ActionTypes.RESIZE_START:
+    case ActionTypes.RESIZE_START: {
       dragStartVibrate();
       return {
         ...state,
@@ -347,15 +347,18 @@ export const desktopReducer = (
           action.payload.id
         )
       };
+    }
 
-    case ActionTypes.RESIZE:
+    case ActionTypes.RESIZE: {
       return { ...state, ...resizeWindow(state, action.payload.coordinate) };
+    }
 
-    case ActionTypes.RESIZE_END:
+    case ActionTypes.RESIZE_END: {
       dragEndVibrate();
       return { ...state, activeWindowId: undefined };
+    }
 
-    case ActionTypes.BRING_TO_FRONT:
+    case ActionTypes.BRING_TO_FRONT: {
       return {
         ...state,
         desktopZindexes: moveUniqueItemToTail(
@@ -363,9 +366,11 @@ export const desktopReducer = (
           action.payload.id
         )
       };
+    }
 
-    case ActionTypes.SET_ICON_THEME_VARIABLES:
+    case ActionTypes.SET_ICON_THEME_VARIABLES: {
       return { ...state, ...action.payload };
+    }
 
     default:
       return assertNever(action);

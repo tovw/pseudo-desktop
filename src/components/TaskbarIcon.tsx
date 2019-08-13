@@ -1,9 +1,10 @@
-import React, { FC, memo, useContext, useEffect, useState } from 'react';
+import React, { FC, memo, useContext, useState } from 'react';
 import { DraggableEventHandler } from 'react-draggable';
 import { ThemeContext } from 'styled-components';
 import { useDesktopActions } from '../state/DesktopContext';
 import styled, { Theme } from '../theme';
 import { Coordinate } from '../utils/types';
+import { useFirstRender } from '../utils/useFirstRender';
 import { DragInfoProps, OrderProps, UIWindowProps } from './DesktopWindow';
 import { DragContainer } from './DragContainer';
 
@@ -28,12 +29,10 @@ const StyledTaskbarIcon = styled.div.attrs<UIWindowProps & DragInfoProps>(
       : p.uiWindow.dimensions.width}px;
 
   box-shadow: ${p => !p.noDragOrInTaskbar && p.theme.elevation.high};
-
   overflow: hidden;
   position: absolute;
   display: flex;
   flex-direction: column;
-
   transition: all 0.3s ease-in-out;
 
   > * {
@@ -41,20 +40,25 @@ const StyledTaskbarIcon = styled.div.attrs<UIWindowProps & DragInfoProps>(
     flex: auto;
     pointer-events: none;
   }
+
   .top {
     max-height: ${p =>
       p.noDragOrInTaskbar ? '100%' : p.theme.desktopWindow.headerHeight};
+
     opacity: ${p =>
       p.noDragOrInTaskbar
         ? p.theme.taskbarIcon.topHalfOpacity
         : p.theme.desktopWindow.headerOpacity};
+
     transition: all 0.3s;
   }
+
   .bottom {
     opacity: ${p =>
       p.noDragOrInTaskbar
         ? p.theme.taskbarIcon.bottomHalfOpacity
-        : p.theme.desktopWindow.bodyDragOpacity};
+        : p.theme.desktopWindow.bodyOpacity};
+
     transition: all 0.3s;
   }
 `;
@@ -82,15 +86,6 @@ const getIconPositionStyle = (
   const zIndex = drag ? 99 : undefined;
 
   return { transform, transition, zIndex };
-};
-
-const useFirstRender = () => {
-  //give time to get the initial style to the DOM
-  const [isFirstRender, setIsFirstRender] = useState(true);
-  useEffect(() => {
-    setTimeout(() => setIsFirstRender(false), 0);
-  }, []);
-  return isFirstRender;
 };
 
 const useTaskbarPositionStyle = (

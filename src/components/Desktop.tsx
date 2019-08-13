@@ -34,8 +34,10 @@ export const Desktop: FC = () => {
     activeWindowId,
     showResizePreview
   } = useDesktopState();
+
   const { setDesktopDimensions } = useDesktopActions();
   const { ref } = useDimensions(setDesktopDimensions);
+
   return (
     <StyledDesktop ref={ref}>
       <StyledTaskbar>
