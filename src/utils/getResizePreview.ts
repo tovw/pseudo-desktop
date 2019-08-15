@@ -6,7 +6,7 @@ export const getResizePreview = (
   dimensions: Dimensions,
   taskbarBottomEdge: number,
   cornerTriggerAreaSide: number,
-  sideTriggerAreaSide: number
+  sideTriggerAreaWidth: number
 ): ResizePreviewProps | undefined => {
   const { x, y } = triggeredFrom;
   const { width: w, height: h } = dimensions;
@@ -15,10 +15,10 @@ export const getResizePreview = (
   const rightCorner = x > w - cornerTriggerAreaSide;
   const topCorner = y < taskbarBottomEdge + cornerTriggerAreaSide;
   const bottomCorner = y > h - cornerTriggerAreaSide;
-  const leftSide = x < sideTriggerAreaSide;
-  const rightSide = x > w - sideTriggerAreaSide;
-  const bottomSide = y > h - sideTriggerAreaSide;
-  const topSide = y < taskbarBottomEdge + sideTriggerAreaSide;
+  const leftSide = x < sideTriggerAreaWidth;
+  const rightSide = x > w - sideTriggerAreaWidth;
+  const bottomSide = y > h - sideTriggerAreaWidth;
+  const topSide = y < taskbarBottomEdge + sideTriggerAreaWidth;
   const underTopBar = y > taskbarBottomEdge;
 
   //top-left

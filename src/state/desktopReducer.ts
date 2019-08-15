@@ -4,64 +4,6 @@ import { getResizePreview } from '../utils/getResizePreview';
 import { Coordinate, Dimensions, UIWindow } from '../utils/types';
 import { Action, ActionTypes } from './desktopActions';
 
-export interface DesktopState {
-  uiWindows: Record<string, UIWindow>;
-  desktopZindexes: string[];
-  taskBarIconOrder: string[];
-  activeWindowId?: string;
-  desktopDimensions: Dimensions;
-  taskbarIconSideLength: number;
-  taskbarIconMargin: number;
-  showResizePreview?: ResizePreviewProps;
-  resizePreviewCornerTriggerArea: number;
-  resizePreviewSideTriggerArea: number;
-  desktopWindowMinSize: number;
-}
-export const initialState: DesktopState = {
-  resizePreviewCornerTriggerArea: 30,
-  resizePreviewSideTriggerArea: 15,
-  desktopWindowMinSize: 100,
-  desktopZindexes: ['1', '2'],
-  taskBarIconOrder: ['3', '4'],
-  desktopDimensions: {
-    height: 0,
-    width: 0
-  },
-  showResizePreview: undefined,
-  taskbarIconSideLength: 0,
-  taskbarIconMargin: 0,
-  activeWindowId: undefined,
-  uiWindows: {
-    '1': {
-      id: '1',
-      topLeftPosition: { x: 30, y: 200 },
-      dimensions: { width: 300, height: 300 },
-      color: '#A5DD97',
-      animateInFrom: undefined
-    },
-    '2': {
-      id: '2',
-      topLeftPosition: { y: 350, x: 225 },
-      dimensions: { width: 123, height: 234 },
-      color: '#95A9F2',
-      animateInFrom: undefined
-    },
-    '3': {
-      id: '3',
-      topLeftPosition: { y: 111, x: 231 },
-      dimensions: { width: 123, height: 234 },
-      color: '#F093AE',
-      animateInFrom: undefined
-    },
-    '4': {
-      id: '4',
-      topLeftPosition: { y: 221, x: 291 },
-      dimensions: { width: 90, height: 400 },
-      color: '#F0C996',
-      animateInFrom: undefined
-    }
-  }
-};
 export const TASKBAR_POSITION_PLACEHOLDER = 'TASKBAR_POSITION_PLACEHOLDER';
 
 //Helpers
@@ -225,7 +167,11 @@ function dragFromTaskbarToDesktop(
   };
 }
 
-function dragEnd(state: DesktopState, drag: Coordinate, offsets: Coordinate) {
+function dragEndChange(
+  state: DesktopState,
+  drag: Coordinate,
+  offsets: Coordinate
+) {
   const releaseInTaskbar = dragIsInTaskBar(
     state.taskbarIconSideLength,
     state.taskbarIconMargin,
@@ -253,20 +199,18 @@ function dragEnd(state: DesktopState, drag: Coordinate, offsets: Coordinate) {
   return state;
 }
 
-function resizeWindow(
-  { uiWindows, activeWindowId, desktopWindowMinSize }: DesktopState,
-  deltas: Coordinate
-) {
-  const oldWindow = uiWindows[activeWindowId!];
+function resizeWindow(state: DesktopState, deltas: Coordinate) {
+  const oldWindow = state.uiWindows[state.activeWindowId!];
   const { width, height } = oldWindow.dimensions;
   return {
+    ...state,
     uiWindows: {
-      ...uiWindows,
-      [activeWindowId!]: {
+      ...state.uiWindows,
+      [state.activeWindowId!]: {
         ...oldWindow,
         dimensions: {
-          width: Math.max(width + deltas.x, desktopWindowMinSize),
-          height: Math.max(height + deltas.y, desktopWindowMinSize)
+          width: Math.max(width + deltas.x, state.desktopWindowMinSize),
+          height: Math.max(height + deltas.y, state.desktopWindowMinSize)
         }
       }
     }
@@ -283,52 +227,133 @@ function dragEndVibrate() {
   vibrate(15);
 }
 
+function dragStart(state: DesktopState, { id }: { id: string }) {
+  dragStartVibrate();
+  return {
+    ...state,
+    activeWindowId: id,
+    desktopZindexes: moveUniqueItemToTail(state.desktopZindexes, id),
+    taskBarIconOrder: dragOriginIsDesktop(state.desktopZindexes, id)
+      ? [...state.taskBarIconOrder, TASKBAR_POSITION_PLACEHOLDER]
+      : state.taskBarIconOrder
+  };
+}
+
+function drag(state: DesktopState, { coordinate }: { coordinate: Coordinate }) {
+  return {
+    ...state,
+    taskBarIconOrder: getTaskbarIconOrder(state, coordinate),
+    showResizePreview: getResizePreview(
+      coordinate,
+      state.desktopDimensions,
+      state.taskbarIconSideLength + state.taskbarIconMargin * 2,
+      state.resizePreviewCornerTriggerArea,
+      state.resizePreviewSideTriggerArea
+    )
+  };
+}
+
+function resizeStart(state: DesktopState, { id }: { id: string }) {
+  dragStartVibrate();
+  return {
+    ...state,
+    activeWindowId: id,
+    desktopZindexes: moveUniqueItemToTail(state.desktopZindexes, id)
+  };
+}
+
+function dragEnd(
+  state: DesktopState,
+  { coordinate, offsets }: { coordinate: Coordinate; offsets: Coordinate }
+) {
+  dragEndVibrate();
+  return {
+    ...state,
+    ...dragEndChange(state, coordinate, offsets),
+    activeWindowId: undefined,
+    showResizePreview: undefined
+  };
+}
+
+function bringWindowToFront(state: DesktopState, { id }: { id: string }) {
+  return {
+    ...state,
+    desktopZindexes: moveUniqueItemToTail(state.desktopZindexes, id)
+  };
+}
+
+export interface DesktopState {
+  uiWindows: Record<string, UIWindow>;
+  desktopZindexes: string[];
+  taskBarIconOrder: string[];
+  activeWindowId?: string;
+  desktopDimensions: Dimensions;
+  taskbarIconSideLength: number;
+  taskbarIconMargin: number;
+  showResizePreview?: ResizePreviewProps;
+  resizePreviewCornerTriggerArea: number;
+  resizePreviewSideTriggerArea: number;
+  desktopWindowMinSize: number;
+}
+export const initialState: DesktopState = {
+  resizePreviewCornerTriggerArea: 30,
+  resizePreviewSideTriggerArea: 15,
+  desktopWindowMinSize: 100,
+  desktopZindexes: ['1', '2'],
+  taskBarIconOrder: ['3', '4'],
+  desktopDimensions: {
+    height: 0,
+    width: 0
+  },
+  showResizePreview: undefined,
+  taskbarIconSideLength: 0,
+  taskbarIconMargin: 0,
+  activeWindowId: undefined,
+  uiWindows: {
+    '1': {
+      id: '1',
+      topLeftPosition: { x: 30, y: 200 },
+      dimensions: { width: 300, height: 300 },
+      color: '#A5DD97',
+      animateInFrom: undefined
+    },
+    '2': {
+      id: '2',
+      topLeftPosition: { y: 350, x: 225 },
+      dimensions: { width: 123, height: 234 },
+      color: '#95A9F2',
+      animateInFrom: undefined
+    },
+    '3': {
+      id: '3',
+      topLeftPosition: { y: 111, x: 231 },
+      dimensions: { width: 123, height: 234 },
+      color: '#F093AE',
+      animateInFrom: undefined
+    },
+    '4': {
+      id: '4',
+      topLeftPosition: { y: 221, x: 291 },
+      dimensions: { width: 90, height: 400 },
+      color: '#F0C996',
+      animateInFrom: undefined
+    }
+  }
+};
+
 export const desktopReducer = (
   state: DesktopState,
   action: Action
 ): DesktopState => {
   switch (action.type) {
-    case ActionTypes.DRAG_START: {
-      dragStartVibrate();
-      return {
-        ...state,
-        activeWindowId: action.payload.id,
-        desktopZindexes: moveUniqueItemToTail(
-          state.desktopZindexes,
-          action.payload.id
-        ),
-        taskBarIconOrder: dragOriginIsDesktop(
-          state.desktopZindexes,
-          action.payload.id
-        )
-          ? [...state.taskBarIconOrder, TASKBAR_POSITION_PLACEHOLDER]
-          : state.taskBarIconOrder
-      };
-    }
+    case ActionTypes.DRAG_START:
+      return dragStart(state, action.payload);
 
-    case ActionTypes.DRAG: {
-      return {
-        ...state,
-        taskBarIconOrder: getTaskbarIconOrder(state, action.payload.coordinate),
-        showResizePreview: getResizePreview(
-          action.payload.coordinate,
-          state.desktopDimensions,
-          state.taskbarIconSideLength + state.taskbarIconMargin * 2,
-          state.resizePreviewCornerTriggerArea,
-          state.resizePreviewSideTriggerArea
-        )
-      };
-    }
+    case ActionTypes.DRAG:
+      return drag(state, action.payload);
 
-    case ActionTypes.DRAG_END: {
-      dragEndVibrate();
-      return {
-        ...state,
-        ...dragEnd(state, action.payload.coordinate, action.payload.offsets),
-        activeWindowId: undefined,
-        showResizePreview: undefined
-      };
-    }
+    case ActionTypes.DRAG_END:
+      return dragEnd(state, action.payload);
 
     case ActionTypes.SET_DESKTOP_DIMENSIONS: {
       return {
@@ -337,36 +362,19 @@ export const desktopReducer = (
       };
     }
 
-    case ActionTypes.RESIZE_START: {
-      dragStartVibrate();
-      return {
-        ...state,
-        activeWindowId: action.payload.id,
-        desktopZindexes: moveUniqueItemToTail(
-          state.desktopZindexes,
-          action.payload.id
-        )
-      };
-    }
+    case ActionTypes.RESIZE_START:
+      return resizeStart(state, action.payload);
 
-    case ActionTypes.RESIZE: {
-      return { ...state, ...resizeWindow(state, action.payload.coordinate) };
-    }
+    case ActionTypes.RESIZE:
+      return resizeWindow(state, action.payload.coordinate);
 
     case ActionTypes.RESIZE_END: {
       dragEndVibrate();
       return { ...state, activeWindowId: undefined };
     }
 
-    case ActionTypes.BRING_TO_FRONT: {
-      return {
-        ...state,
-        desktopZindexes: moveUniqueItemToTail(
-          state.desktopZindexes,
-          action.payload.id
-        )
-      };
-    }
+    case ActionTypes.BRING_TO_FRONT:
+      return bringWindowToFront(state, action.payload);
 
     case ActionTypes.SET_ICON_THEME_VARIABLES: {
       return { ...state, ...action.payload };
